@@ -189,5 +189,4 @@ void goToGoal() {
     }
 
     moveToPosition(closestGoalX, closestGoalY, heading);
-
 }

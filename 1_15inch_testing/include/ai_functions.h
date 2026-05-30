@@ -27,7 +27,13 @@ enum SCORING_LOCATIONS{
     BLUE_HIGH_RIGHT,
     BLUE_MID_LEFT,
     BLUE_MID_RIGHT
-}
+};
+
+struct ScoringPos {
+    double x;
+    double y;
+    double heading;
+};
 
 using namespace vex;
 

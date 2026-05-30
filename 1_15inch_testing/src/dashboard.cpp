@@ -141,7 +141,7 @@ static void dashboardVexlink( int ox, int oy, int width, int height ) {
   
   currX = x;
   currY = y;
-  currH = heading;
+  currH = DrivetrainInertial.heading(rotationUnits::deg);
 
   oy += 10;
   if(status & POS_GPS_CONNECTED)

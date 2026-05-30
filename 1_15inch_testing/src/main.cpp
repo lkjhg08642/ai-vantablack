@@ -71,9 +71,11 @@ void autonomousMain(void) {
 int main() {
 
   static AI_RECORD local_map; // local storage for latest data from the Jetson Nano
-
+  
   int32_t loop_time = 33; // Run at about 15Hz
 
+  DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
+  
   // start the status update display
   thread t1(dashboardTask);
 

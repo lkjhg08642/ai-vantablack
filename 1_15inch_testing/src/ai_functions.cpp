@@ -25,25 +25,18 @@ const double GEAR_RATIO = 0.5;            // motor:wheel ratio
 const double TRACK_WIDTH = 12.0;          // inches between left/right wheels (ADJUST TO YOUR ROBOT)
 const double PI = 3.14159265358979323846;
 
-double[] getScoringPos (SCORING_LOCATIONS location) { //x, y, heading
-    switch(location) {
-        case RED_HIGH_LEFT:
-            return {-35, 49, 270};
-        case RED_HIGH_RIGHT:
-            return {-36, -47.5, 270};
-        case RED_MID_LEFT:
-            return {-16, 13.5, 311};
-        case RED_MID_RIGHT:
-            return {-15.5, -18, 43};
-        case BLUE_HIGH_LEFT:
-            return {35.5, 49, 90};
-        case BLUE_HIGH_RIGHT:
-            return {37.5, 47.5, 90};
-        case BLUE_MID_LEFT:
-            return {16, -14, 135};
-        case BLUE_MID_RIGHT:
-            return {17, 20.5, 221};
+ScoringPos getScoringPos(SCORING_LOCATIONS location) {
+    switch (location) {
+        case RED_HIGH_LEFT:   return {-37,   47,    270};
+        case RED_HIGH_RIGHT:  return {-36,  -47.5,  270};
+        case RED_MID_LEFT:    return {-16,   13.5,  311};
+        case RED_MID_RIGHT:   return {-15.5, -18,    43};
+        case BLUE_HIGH_LEFT:  return { 35.5, 49,     90};
+        case BLUE_HIGH_RIGHT: return { 37.5, 47.5,   90};
+        case BLUE_MID_LEFT:   return { 16,  -14,    135};
+        case BLUE_MID_RIGHT:  return { 17,   20.5,  221};
     }
+    return {0, 0, 0};
 }
 
 // Helper: wrap angle to [-180, 180]
@@ -53,8 +46,79 @@ double wrapAngle(double angle) {
     return angle;
 }
 
-void turnTo(double targetX, double targetY) {
+void turnToHeading(double angle) {
+    // PID constants for turning (tune these for your robot)
+    double kP = 1.0;
+    double kI = 0.02;
+    double kD = 0.2;
+    // Tolerances
+    double HEADING_TOLERANCE = 1.0;     // degrees
+    double INTEGRAL_LIMIT = 50.0;       // anti-windup
+    double MIN_POWER = 2.0;             // minimum power to overcome static friction
+    double MAX_POWER = 80.0;            // cap on motor power (%)
+    double SETTLE_TIME_MS = 150;        // must be within tolerance for this long
+    double TIMEOUT_MS = 2500;           // abort if taking too long
 
+    // Target heading is just the requested angle (absolute heading in degrees, CW from +Y)
+    double targetHeading = angle;
+
+    // PID state
+    double integral = 0.0;
+    double prevError = wrapAngle(targetHeading - currH);
+    int settleCounter = 0;
+    int elapsed = 0;
+    const int dt = 10;  // ms per loop
+
+    while (elapsed < TIMEOUT_MS) {
+        // Compute error as the shortest angular distance
+        double error = wrapAngle(targetHeading - currH);
+
+        // Check settling
+        if (std::fabs(error) < HEADING_TOLERANCE) {
+            settleCounter += dt;
+            if (settleCounter >= SETTLE_TIME_MS) break;
+        } else {
+            settleCounter = 0;
+        }
+
+        // Integral with anti-windup (only accumulate when close)
+        if (std::fabs(error) < 15.0) {
+            integral += error * (dt / 1000.0);
+            if (integral >  INTEGRAL_LIMIT) integral =  INTEGRAL_LIMIT;
+            if (integral < -INTEGRAL_LIMIT) integral = -INTEGRAL_LIMIT;
+        } else {
+            integral = 0;
+        }
+
+        // Derivative
+        double derivative = (error - prevError) / (dt / 1000.0);
+        prevError = error;
+
+        // PID output
+        double output = kP * error + kI * integral + kD * derivative;
+
+        // Clamp magnitude
+        if (output >  MAX_POWER) output =  MAX_POWER;
+        if (output < -MAX_POWER) output = -MAX_POWER;
+
+        // Minimum power to overcome friction (only when not essentially done)
+        if (std::fabs(error) > HEADING_TOLERANCE && std::fabs(output) < MIN_POWER) {
+            output = (output >= 0) ? MIN_POWER : -MIN_POWER;
+        }
+
+        // Apply to drive: positive output = turn clockwise (right)
+        leftDriveSmart.spin(vex::directionType::fwd,   output, vex::velocityUnits::pct);
+        rightDriveSmart.spin(vex::directionType::rev,  output, vex::velocityUnits::pct);
+
+        task::sleep(dt);
+        elapsed += dt;
+    }
+
+    leftDriveSmart.stop(brake);
+    rightDriveSmart.stop(brake);
+}
+
+void turnTo(double targetX, double targetY) {
     // PID constants for turning (tune these for your robot)
     double kP = 1.0;
     double kI = 0.02;
@@ -134,7 +198,93 @@ void turnTo(double targetX, double targetY) {
     rightDriveSmart.stop(brake);
 }
 
-void driveFor(double dist) {
+// void turnTo(double targetX, double targetY) {
+//     // ===== Speed profile =====
+//     const double MIN_SPEED = 8.0;            // % at start and end
+//     const double ABSOLUTE_MAX = 40.0;         // % cap on cruise speed for any turn
+//     const double ACCEL_FRACTION = 0.3;       // first 15% of the turn: ramp up
+//     const double DECEL_FRACTION = 0.3;       // last  15% of the turn: ramp down
+
+//     // ===== Turn-size-proportional max speed =====
+//     // Scale linearly from MIN_SPEED (at 0°) up to ABSOLUTE_MAX (at FULL_SPEED_TURN°).
+//     // Beyond FULL_SPEED_TURN, cap at ABSOLUTE_MAX.
+//     const double FULL_SPEED_TURN = 90.0;      // degrees needed to earn full cruise speed
+
+//     // ===== Tolerances and limits =====
+//     const double HEADING_TOLERANCE = 1.0;
+//     const int    SETTLE_TIME_MS = 150;
+//     const int    TIMEOUT_MS = 2500;
+//     const int    dt = 10;
+
+//     // ===== Compute desired absolute heading =====
+//     double dx = targetX - currX;
+//     double dy = targetY - currY;
+//     if (std::sqrt(dx*dx + dy*dy) < 0.1) return;
+//     double targetHeading = std::atan2(dx, dy) * 180.0 / PI;
+
+//     // ===== Capture initial error — total turn we plan to make =====
+//     double initialError = wrapAngle(targetHeading - currH);
+//     double totalTurn = std::fabs(initialError);
+//     if (totalTurn < HEADING_TOLERANCE) return;
+
+//     // ===== Compute MAX_SPEED proportional to turn size =====
+//     double MAX_SPEED = MIN_SPEED + (ABSOLUTE_MAX - MIN_SPEED) * (totalTurn / FULL_SPEED_TURN);
+//     if (MAX_SPEED > ABSOLUTE_MAX) MAX_SPEED = ABSOLUTE_MAX;
+//     if (MAX_SPEED < MIN_SPEED)    MAX_SPEED = MIN_SPEED;
+
+//     // ===== Loop =====
+//     int settleCounter = 0;
+//     int elapsed = 0;
+
+//     while (elapsed < TIMEOUT_MS) {
+//         double error = wrapAngle(targetHeading - currH);
+
+//         if (std::fabs(error) < HEADING_TOLERANCE) {
+//             settleCounter += dt;
+//             if (settleCounter >= SETTLE_TIME_MS) break;
+//         } else {
+//             settleCounter = 0;
+//         }
+
+//         // Progress through the planned turn
+//         double turned = totalTurn - std::fabs(error);
+//         if (turned < 0) turned = 0;
+//         double progress = turned / totalTurn;
+//         if (progress > 1.0) progress = 1.0;
+
+//         // Trapezoidal speed
+//         double speed;
+//         if (progress < ACCEL_FRACTION) {
+//             double t = progress / ACCEL_FRACTION;
+//             speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * t;
+//         } else if (progress > (1.0 - DECEL_FRACTION)) {
+//             double t = (progress - (1.0 - DECEL_FRACTION)) / DECEL_FRACTION;
+//             speed = MAX_SPEED - (MAX_SPEED - MIN_SPEED) * t;
+//         } else {
+//             speed = MAX_SPEED;
+//         }
+
+//         // Direction follows the live sign of error (allows reversal on overshoot)
+//         int liveDir = (error >= 0) ? 1 : -1;
+//         double output = speed * liveDir;
+
+//         if (output >= 0) {
+//             leftDriveSmart.spin(vex::directionType::fwd,  output, vex::velocityUnits::pct);
+//             rightDriveSmart.spin(vex::directionType::rev, output, vex::velocityUnits::pct);
+//         } else {
+//             leftDriveSmart.spin(vex::directionType::rev, -output, vex::velocityUnits::pct);
+//             rightDriveSmart.spin(vex::directionType::fwd, -output, vex::velocityUnits::pct);
+//         }
+
+//         task::sleep(dt);
+//         elapsed += dt;
+//     }
+
+//     leftDriveSmart.stop(brake);
+//     rightDriveSmart.stop(brake);
+// }
+
+/*void driveFor(double dist) {
     // PID constants for driving (tune for your robot)
     double kP_drive = 2.0;
     double kI_drive = 0.0;
@@ -223,6 +373,87 @@ void driveFor(double dist) {
 
     leftDriveSmart.stop(brake);
     rightDriveSmart.stop(brake);
+}*/
+
+void driveFor(double distance) {
+
+    // ===== Speed profile =====
+    const double MIN_SPEED = 10.0;            // % at start and end
+    const double ACCEL_FRACTION = 0.15;       // 0% -> 15% of distance: ramp up
+    const double DECEL_FRACTION = 0.15;       // 85% -> 100% of distance: ramp down
+
+    // ===== Distance-proportional max speed =====
+    // Scale linearly from MIN_SPEED (at 0 in) up to 100% (at FULL_SPEED_DIST in).
+    // Beyond FULL_SPEED_DIST, cap at 100%.
+    const double FULL_SPEED_DIST = 48.0;      // inches needed to earn full 100% speed
+    const double ABSOLUTE_MAX = 60.0;
+
+    double absDist = std::fabs(distance);
+    double MAX_SPEED = MIN_SPEED + (ABSOLUTE_MAX - MIN_SPEED) * (absDist / FULL_SPEED_DIST);
+    if (MAX_SPEED > ABSOLUTE_MAX) MAX_SPEED = ABSOLUTE_MAX;
+    if (MAX_SPEED < MIN_SPEED)    MAX_SPEED = MIN_SPEED;
+
+    // ===== Loop timing =====
+    const int dt = 10;  // ms
+
+    // ===== Distance setup =====
+    double wheelCircumference = PI * WHEEL_DIAMETER;
+    double wheelRevs = absDist / wheelCircumference;
+    double motorRevs = wheelRevs / GEAR_RATIO;
+    double targetDegrees = motorRevs * 360.0;
+
+    bool driveForward = (distance >= 0);
+    double startPos = frontLeft.position(degrees);
+
+    // ===== Drive loop =====
+    while (true) {
+        double traveled = std::fabs(frontLeft.position(degrees) - startPos);
+        if (traveled >= targetDegrees) break;
+
+        double progress = traveled / targetDegrees;
+
+        // ===== Compute speed from trapezoidal profile =====
+        double speed;
+        if (progress < ACCEL_FRACTION) {
+            double t = progress / ACCEL_FRACTION;
+            speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * t;
+        } else if (progress > (1.0 - DECEL_FRACTION)) {
+            double t = (progress - (1.0 - DECEL_FRACTION)) / DECEL_FRACTION;
+            speed = MAX_SPEED - (MAX_SPEED - MIN_SPEED) * t;
+        } else {
+            speed = MAX_SPEED;
+        }
+
+        vex::directionType dir = driveForward ? vex::directionType::fwd : vex::directionType::rev;
+        leftDriveSmart.spin(dir, speed, percent);
+        rightDriveSmart.spin(dir, speed, percent);
+
+        task::sleep(dt);
+    }
+
+    leftDriveSmart.stop(brake);
+    rightDriveSmart.stop(brake);
+}
+
+void autoOuttakeHigh(int time) {
+    outtake.spin(directionType::fwd, 100, velocityUnits::pct);
+    intake.spin(vex::directionType::fwd, 100, percent);
+    wait(time, timeUnits::msec);
+    outtake.stop();
+}
+
+void autoOuttakeMidHigh(int time) {
+    outtake.spin(directionType::fwd, 100, velocityUnits::pct);
+    intake.spin(vex::directionType::fwd, 100, percent);
+    wait(time, timeUnits::msec);
+    outtake.stop();
+}
+
+void autoOuttakeMidLow(int time) {
+    outtake.spin(directionType::rev, 100, velocityUnits::pct);
+    intake.spin(vex::directionType::rev, 100, percent);
+    wait(time, timeUnits::msec);
+    outtake.stop();
 }
 
 void moveToPosition(double targetX, double targetY){
@@ -252,7 +483,6 @@ DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map){
             lowestDist = distance;
         }
     }
-
     return target;
 }
 
@@ -328,10 +558,35 @@ int autoIntake() {
     return 1;
 }
 
+void scoreIn(SCORING_LOCATIONS location) {
+    ScoringPos pos = getScoringPos(location);
+    moveToPosition(pos.x, pos.y);
+    turnToHeading(pos.heading);
+    if (location == RED_HIGH_LEFT || location == RED_HIGH_RIGHT || location == BLUE_HIGH_LEFT || location == BLUE_HIGH_RIGHT) {
+        slideUpTo(350); // Raise to high goal
+        driveFor(-6.0); // Drive forward to score
+        autoOuttakeHigh(2000);
+    } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
+        slideMoveToBottomPosition();
+        driveFor(-6.0); // Drive forward to score
+        autoOuttakeMidHigh(2000);
+    }
+    else{
+        slideMoveToBottomPosition();
+        driveFor(6.0); // Drive forward to score
+        autoOuttakeMidLow(2000);
+    }
+}
+
+void findGoal(){
+    
+}
+
 void auton_isolation(){
 //   int n = 0;
   GPS.calibrate();
   waitUntil(!(GPS.isCalibrating()));
+  DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
 
 //   DETECTION_OBJECT target;
 //   double lowestDist = 0;
@@ -424,11 +679,9 @@ void teleop(void) {
     backRight.spin(vex::directionType::fwd, brSpeed, percent);
 
     if (Controller1.ButtonY.pressing()) {
-        moveToPosition(-45, -24);
-        moveToPosition(45, -24);
-        moveToPosition(45, 24);
-        moveToPosition(-45, 24);
-        moveToPosition(-45, -24);
+        autoOuttakeHigh(2000);
+        autoOuttakeMidHigh(2000);
+        autoOuttakeMidLow(2000);
     }
 
     if (Controller1.ButtonUp.pressing()) {

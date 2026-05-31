@@ -27,12 +27,12 @@ const double PI = 3.14159265358979323846;
 
 ScoringPos getScoringPos(SCORING_LOCATIONS location) {
     switch (location) {
-        case RED_HIGH_LEFT:   return {-37,   47,    270};
-        case RED_HIGH_RIGHT:  return {-36,  -47.5,  270};
+        case RED_HIGH_LEFT:   return {-40,   47,    270};
+        case RED_HIGH_RIGHT:  return {-37,  -47,  270};
         case RED_MID_LEFT:    return {-16,   13.5,  311};
         case RED_MID_RIGHT:   return {-15.5, -18,    43};
-        case BLUE_HIGH_LEFT:  return { 35.5, 49,     90};
-        case BLUE_HIGH_RIGHT: return { 37.5, 47.5,   90};
+        case BLUE_HIGH_LEFT:  return { 40, 49,     90};
+        case BLUE_HIGH_RIGHT: return { 40, 47.5,   90};
         case BLUE_MID_LEFT:   return { 16,  -14,    135};
         case BLUE_MID_RIGHT:  return { 17,   20.5,  221};
     }
@@ -379,14 +379,14 @@ void driveFor(double distance) {
 
     // ===== Speed profile =====
     const double MIN_SPEED = 10.0;            // % at start and end
-    const double ACCEL_FRACTION = 0.15;       // 0% -> 15% of distance: ramp up
-    const double DECEL_FRACTION = 0.15;       // 85% -> 100% of distance: ramp down
+    const double ACCEL_FRACTION = 0.20;       // 0% -> 15% of distance: ramp up
+    const double DECEL_FRACTION = 0.20;       // 85% -> 100% of distance: ramp down
 
     // ===== Distance-proportional max speed =====
     // Scale linearly from MIN_SPEED (at 0 in) up to 100% (at FULL_SPEED_DIST in).
     // Beyond FULL_SPEED_DIST, cap at 100%.
     const double FULL_SPEED_DIST = 48.0;      // inches needed to earn full 100% speed
-    const double ABSOLUTE_MAX = 60.0;
+    const double ABSOLUTE_MAX = 70.0;
 
     double absDist = std::fabs(distance);
     double MAX_SPEED = MIN_SPEED + (ABSOLUTE_MAX - MIN_SPEED) * (absDist / FULL_SPEED_DIST);
@@ -404,11 +404,13 @@ void driveFor(double distance) {
 
     bool driveForward = (distance >= 0);
     double startPos = frontLeft.position(degrees);
+    double startTime = Brain.Timer.time(msec);
+    int timeout = absDist * 60;
 
     // ===== Drive loop =====
     while (true) {
         double traveled = std::fabs(frontLeft.position(degrees) - startPos);
-        if (traveled >= targetDegrees) break;
+        if (traveled >= targetDegrees || Brain.Timer.time(msec) - startTime >= timeout) break;
 
         double progress = traveled / targetDegrees;
 
@@ -483,6 +485,7 @@ DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map){
             lowestDist = distance;
         }
     }
+
     return target;
 }
 
@@ -558,28 +561,33 @@ int autoIntake() {
     return 1;
 }
 
-void scoreIn(SCORING_LOCATIONS location) {
+void scoreIn(SCORING_LOCATIONS location, int time) {
     ScoringPos pos = getScoringPos(location);
     moveToPosition(pos.x, pos.y);
     turnToHeading(pos.heading);
     if (location == RED_HIGH_LEFT || location == RED_HIGH_RIGHT || location == BLUE_HIGH_LEFT || location == BLUE_HIGH_RIGHT) {
         slideUpTo(350); // Raise to high goal
-        driveFor(-6.0); // Drive forward to score
-        autoOuttakeHigh(2000);
+        driveFor(-15.0); // Drive forward to score
+        autoOuttakeHigh(time);
     } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
         slideMoveToBottomPosition();
-        driveFor(-6.0); // Drive forward to score
-        autoOuttakeMidHigh(2000);
+        driveFor(-8.0); // Drive forward to score
+        autoOuttakeMidHigh(time);
     }
     else{
         slideMoveToBottomPosition();
-        driveFor(6.0); // Drive forward to score
-        autoOuttakeMidLow(2000);
+        driveFor(8.0); // Drive forward to score
+        autoOuttakeMidLow(time);
     }
 }
 
-void findGoal(){
-    
+void intakeTarget (DETECTION_OBJECT target) {
+    double targetX = target.mapLocation.x / 0.0254; // Convert from meters to inches
+    double targetY = target.mapLocation.y / 0.0254; // Convert from meters to inches
+    intakemotorrunning = true;
+    vex::task t1(autoIntake);
+    moveToPosition(targetX, targetY);
+    intakemotorrunning = false;
 }
 
 void auton_isolation(){
@@ -647,6 +655,9 @@ void teleop(void) {
     slideMotor2.setPosition(0, rotationUnits::deg);
     //link.setOffset()
 
+    // int x = 1;
+    // int y = 1;
+    Controller1.Screen.clearScreen();
   while (1) {
     // This is the main execution loop for the user control program.
     // Each time through the loop your program should update motor + servo
@@ -678,10 +689,27 @@ void teleop(void) {
     frontRight.spin(vex::directionType::fwd, frSpeed, percent);
     backRight.spin(vex::directionType::fwd, brSpeed, percent);
 
+    // for(int i=0;i<3;i++) {
+    //     if(i < local_map.detectionCount ) {
+    //         Controller1.Screen.setCursor(x+i, y);
+    //         Controller1.Screen.print("%1d,%.2f,%.2f,%.2f",
+    //                         local_map.detections[i].classID,
+    //                         (local_map.detections[i].mapLocation.x / 0.0254),  // mm -> inches
+    //                         (local_map.detections[i].mapLocation.y / 0.0254),  // mm -> inches
+    //                         (local_map.detections[i].mapLocation.z / 0.0254)); // mm -> inches
+    //     }
+    //     else {
+    //         Controller1.Screen.setCursor(x+i, y);
+    //         Controller1.Screen.clearLine();
+    //         Controller1.Screen.print("---");
+    //     }
+    // }
+
+
     if (Controller1.ButtonY.pressing()) {
-        autoOuttakeHigh(2000);
-        autoOuttakeMidHigh(2000);
-        autoOuttakeMidLow(2000);
+        intakeTarget(findTarget(OBJECT::BallRed, local_map));
+        wait(500, timeUnits::msec);
+        scoreIn(RED_HIGH_RIGHT, 2000);
     }
 
     if (Controller1.ButtonUp.pressing()) {
@@ -726,7 +754,7 @@ void teleop(void) {
         wait(200, timeUnits::msec);
     }
 
-    task::sleep(10);
+    task::sleep(20);
 
   }
 }

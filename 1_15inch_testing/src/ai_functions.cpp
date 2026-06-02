@@ -557,7 +557,7 @@ void driveFor(double distance, double speedPercent) {
             speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * t * speedPercent;
         } else if (progress > (1.0 - DECEL_FRACTION)) {
             double t = (progress - (1.0 - DECEL_FRACTION)) / DECEL_FRACTION;
-            speed = MAX_SP.EED - (MAX_SPEED - MIN_SPEED) * t * speedPercent;
+            speed = MAX_SPEED - (MAX_SPEED - MIN_SPEED) * t * speedPercent;
         } else {
             speed = MAX_SPEED * speedPercent;
         }
@@ -600,7 +600,7 @@ void moveToPosition(double targetX, double targetY){
 
     // Then drive forward to the target point
     double dist = distanceTo(targetX, targetY);
-    driveFor(dist);
+    driveFor(dist, 1);
 }
 
 double distanceTo(double target_x, double target_y){
@@ -703,16 +703,16 @@ void scoreIn(SCORING_LOCATIONS location, int time) {
     turnToAbsolute(pos.heading);
     if (location == RED_HIGH_LEFT || location == RED_HIGH_RIGHT || location == BLUE_HIGH_LEFT || location == BLUE_HIGH_RIGHT) {
         slideUpTo(350); // Raise to high goal
-        driveFor(-15.0); // Drive forward to score
+        driveFor(-15.0, 1); // Drive forward to score
         autoOuttakeHigh(time);
     } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
         slideMoveToBottomPosition();
-        driveFor(-8.0); // Drive forward to score
+        driveFor(-8.0, 1); // Drive forward to score
         autoOuttakeMidHigh(time);
     }
     else{
         slideMoveToBottomPosition();
-        driveFor(8.0); // Drive forward to score
+        driveFor(8.0, 1); // Drive forward to score
         autoOuttakeMidLow(time);
     }
 }
@@ -895,7 +895,7 @@ int driveRoute(const std::vector<std::pair<double,double>>& path) {
         return 1;
       }
       double seg = std::min(STEP, dist - driven);
-      driveFor(seg);
+      driveFor(seg, 1);
       driven += seg;
     }
   }
@@ -963,7 +963,7 @@ void routePlan(double destinationX, double destinationY) {
     if (pointBlocked(currX, currY, obs)) {
       // The detected obstacle overlaps our own cell (very close hit);
       // shrink its effect by backing off slightly before replanning.
-      driveFor(-6.0);
+      driveFor(-6.0, 1);
     }
   }
   Brain.Screen.print("Could not reach: too many obstacles");
@@ -974,11 +974,11 @@ void auton_isolation(){
     GPS.calibrate();
     waitUntil(!(GPS.isCalibrating()));
     DrivetrainInertial.setHeading(90, rotationUnits::deg);
-    driveFor(20.0);
+    driveFor(20.0, 1);
     turnToAbsolute(0);
     intakemotorrunning = true;
     vex::task t1(autoIntake);
-    driveFor(20.0);
+    driveFor(20.0, 0.5);
     moveToPosition(-36, 30);
     intakemotorrunning = false;
     turnToAbsolute(0);

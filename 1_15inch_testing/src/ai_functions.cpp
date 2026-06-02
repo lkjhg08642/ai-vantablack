@@ -974,23 +974,28 @@ void auton_isolation(){
     GPS.calibrate();
     waitUntil(!(GPS.isCalibrating()));
     DrivetrainInertial.setHeading(90, rotationUnits::deg);
-    driveFor(20.0, 1);
+    driveFor(18.0, 1);
     turnToAbsolute(0);
     intakemotorrunning = true;
     vex::task t1(autoIntake);
     driveFor(20.0, 0.5);
-    moveToPosition(-36, 30);
+    moveToPosition(-36, 24);
     intakemotorrunning = false;
     turnToAbsolute(0);
-    while(FrontDis.objectDistance(inches) > 18.0) {
-        leftDriveSmart.spin(vex::directionType::fwd, 10, vex::velocityUnits::pct);
-        rightDriveSmart.spin(vex::directionType::fwd, 10, vex::velocityUnits::pct);
+    while(FrontDis.objectDistance(inches) > 20.0) {
+        leftDriveSmart.spin(vex::directionType::fwd, 15, vex::velocityUnits::pct);
+        rightDriveSmart.spin(vex::directionType::fwd, 15, vex::velocityUnits::pct);
         wait(20, timeUnits::msec);
     }
     leftDriveSmart.stop(brake);
     rightDriveSmart.stop(brake);
-    turnToAbsolute(270);
-    driveFor(-12.0);
+    turnToAbsolute(265);
+    leftDriveSmart.spin(vex::directionType::fwd, 5, vex::velocityUnits::pct);
+    rightDriveSmart.spin(vex::directionType::fwd, 5, vex::velocityUnits::pct);
+    leftDriveSmart.stop(brake);
+    rightDriveSmart.stop(brake);
+    slideUpTo(350);
+    driveFor(-18.0, 1);
 }
 
 void auton_interaction(){

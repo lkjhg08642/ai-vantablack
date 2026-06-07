@@ -141,9 +141,11 @@ static void dashboardVexlink( int ox, int oy, int width, int height ) {
   
   currX = x;
   currY = y;
-  currH = heading;
-  //currH = DrivetrainInertial.heading(rotationUnits::deg);
+  //currH = heading;
+  currH = DrivetrainInertial.heading(rotationUnits::deg);
 
+  Controller1.Screen.setCursor(2, 1);
+  Controller1.Screen.print("(%.0f, %.0f)", currX, currY);
   oy += 10;
   if(status & POS_GPS_CONNECTED)
     Brain.Screen.printAt( ox + 10, oy += 15, "Location: local (GPS_OK)");

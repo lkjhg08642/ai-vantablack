@@ -297,19 +297,6 @@ void turnToRelative(double theta) {
 }
 
 void turnTo(double targetX, double targetY) {
-    // PID constants for turning (tune these for your robot)
-    double kP = 1.0;
-    double kI = 0.02;
-    double kD = 0.2;
-
-    // Tolerances
-    double HEADING_TOLERANCE = 1.0;     // degrees
-    double INTEGRAL_LIMIT = 50.0;       // anti-windup
-    double MIN_POWER = 2.0;             // minimum power to overcome static friction
-    double MAX_POWER = 80.0;            // cap on motor power (%)
-    double SETTLE_TIME_MS = 150;           // must be within tolerance for this long
-    double TIMEOUT_MS = 2500;              // abort if taking too long
-
     // Compute desired absolute heading toward target point.
     // Using atan2(dx, dy) because heading 0 = +Y axis, CW positive.
     double dx = targetX - currX;
@@ -484,8 +471,9 @@ void moveToPosition(double targetX, double targetY){
 
     // Then drive forward to the target point
     double dist = distanceTo(targetX, targetY);
-    driveFor(dist, 1);
-    // forwardStraight(dist);
+    
+    //driveFor(dist, 1);
+    forwardStraight(dist);
 }
 
 double distanceTo(double target_x, double target_y){
@@ -611,13 +599,43 @@ void intakeTarget (DETECTION_OBJECT target) {
     intakemotorrunning = false;
 }
 
+void pathFindTo(double destX, double destY) {
+    double startX = currX, startY =  currY;
+
+    int sr, sc, gr, gc;
+    GPStoGrid(startX, startY, sr, sc);
+    GPStoGrid(destX,  destY,  gr, gc);
+
+    int pathR[N*N], pathC[N*N];
+    int len = aStar(sr, sc, gr, gc, pathR, pathC);
+
+    if (len == 0) {
+        Brain.Screen.print("No path found");
+    }
+
+    int turnR[N*N], turnC[N*N];
+    int turns = extractTurns(pathR, pathC, len, turnR, turnC);
+
+    // Print + drive the turning waypoints in GPS coordinates
+    Brain.Screen.print("Turn waypoints (GPS in):");
+    Brain.Screen.newLine();
+    for (int i = 0; i < turns; i++) {
+        double wx, wy;
+        gridToGPS(turnR[i], turnC[i], wx, wy);
+        Controller1.Screen.setCursor(1, 1);
+        Controller1.Screen.print("(%.0f, %.0f)", wx, wy);
+        wait(500, timeUnits::msec);
+        moveToPosition(wx, wy);
+    }
+}
+
 void auton_isolation(){
     slideMotor1.setPosition(0, rotationUnits::deg);
     slideMotor2.setPosition(0, rotationUnits::deg);
 //    int n = 0;
-    GPS.calibrate();
-    waitUntil(!(GPS.isCalibrating()));
-    DrivetrainInertial.setHeading(90, rotationUnits::deg);
+    // GPS.calibrate();
+    // waitUntil(!(GPS.isCalibrating()));
+    // DrivetrainInertial.setHeading(90, rotationUnits::deg);
     forwardStraight(18.0);
     // driveFor(18.0, 1);
     turnToAbsolute(0);
@@ -692,57 +710,13 @@ void teleop(void) {
     frontRight.spin(vex::directionType::fwd, frSpeed, percent);
     backRight.spin(vex::directionType::fwd, brSpeed, percent);
 
-    // for(int i=0;i<3;i++) {
-    //     if(i < local_map.detectionCount ) {
-    //         Controller1.Screen.setCursor(x+i, y);
-    //         Controller1.Screen.print("%1d,%.2f,%.2f,%.2f",
-    //                         local_map.detections[i].classID,
-    //                         (local_map.detections[i].mapLocation.x / 0.0254),  // mm -> inches
-    //                         (local_map.detections[i].mapLocation.y / 0.0254),  // mm -> inches
-    //                         (local_map.detections[i].mapLocation.z / 0.0254)); // mm -> inches
-    //     }
-    //     else {
-    //         Controller1.Screen.setCursor(x+i, y);
-    //         Controller1.Screen.clearLine();
-    //         Controller1.Screen.print("---");
-    //     }
-    // }
-
 
     if (Controller1.ButtonY.pressing()) {
-        double startX = currX, startY =  currY;
-        double destX  =  -48, destY  = 48;
-
-        int sr, sc, gr, gc;
-        GPStoGrid(startX, startY, sr, sc);
-        GPStoGrid(destX,  destY,  gr, gc);
-
-        int pathR[N*N], pathC[N*N];
-        int len = aStar(sr, sc, gr, gc, pathR, pathC);
-
-        if (len == 0) {
-            Brain.Screen.print("No path found");
-        }
-
-        int turnR[N*N], turnC[N*N];
-        int turns = extractTurns(pathR, pathC, len, turnR, turnC);
-
-        // Print + drive the turning waypoints in GPS coordinates
-        Brain.Screen.print("Turn waypoints (GPS in):");
-        Brain.Screen.newLine();
-        for (int i = 0; i < turns; i++) {
-            double wx, wy;
-            gridToGPS(turnR[i], turnC[i], wx, wy);
-            Controller1.Screen.setCursor(1, 1);
-            Controller1.Screen.print("(%.0f, %.0f)", wx, wy);
-            Brain.Screen.print("(%.0f, %.0f)", wx, wy);
-            Brain.Screen.newLine();
-            wait(500, timeUnits::msec);
-            moveToPosition(wx, wy);
-        }
+        pathFindTo(-48, 48);
     }
+
     if (Controller1.ButtonA.pressing()) {
-        forwardStraight(-48.0);
+        forwardStraight(20.0);
     }
 
     if (Controller1.ButtonUp.pressing()) {

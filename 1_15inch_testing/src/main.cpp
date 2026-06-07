@@ -74,7 +74,10 @@ int main() {
   
   int32_t loop_time = 33; // Run at about 15Hz
 
-  //DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
+  GPS.calibrate();
+  waitUntil(!(GPS.isCalibrating()));
+
+  DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
   
   // start the status update display
   thread t1(dashboardTask);

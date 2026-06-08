@@ -136,16 +136,14 @@ static void dashboardVexlink( int ox, int oy, int width, int height ) {
   float x,y,heading;
   int32_t status;
   link.get_local_location(x, y, heading, status);
-  x = x / 0.0254;
-  y = y / 0.0254;
+  currX = x / 0.0254;
+  currY = y / 0.0254;
   
-  currX = x;
-  currY = y;
   //currH = heading;
   currH = DrivetrainInertial.heading(rotationUnits::deg);
 
-  Controller1.Screen.setCursor(2, 1);
-  Controller1.Screen.print("(%.0f, %.0f)", currX, currY);
+  // Controller1.Screen.setCursor(2, 1);
+  // Controller1.Screen.print("(%.0f, %.0f)", currX, currY);
   oy += 10;
   if(status & POS_GPS_CONNECTED)
     Brain.Screen.printAt( ox + 10, oy += 15, "Location: local (GPS_OK)");
@@ -172,15 +170,14 @@ static void dashboardVexlink( int ox, int oy, int width, int height ) {
 int dashboardTask() {
   while(true) {
     jetson_comms.get_data(&local_map);
-    link.set_remote_location(local_map.pos.x, local_map.pos.y,
-                              local_map.pos.az, local_map.pos.status);
+    link.set_remote_location(local_map.pos.x, local_map.pos.y, local_map.pos.az, local_map.pos.status);
     jetson_comms.request_map();
     // status
     dashboardJetson( 0, 0, 280, 240 );
     dashboardVexlink( 279, 0, 201, 240 );
     // draw, at 30Hz
     Brain.Screen.render();
-    this_thread::sleep_for(16);
+    this_thread::sleep_for(10);
   }
   return 0;
 }

@@ -18,29 +18,38 @@ enum OBJECT {
     BallRed
 };
 
+enum SCORING_LOCATIONS{
+    RED_HIGH_LEFT,
+    RED_HIGH_RIGHT,
+    RED_MID_LEFT,
+    RED_MID_RIGHT,
+    BLUE_HIGH_LEFT,
+    BLUE_HIGH_RIGHT,
+    BLUE_MID_LEFT,
+    BLUE_MID_RIGHT
+};
+
+struct ScoringPos {
+    double x;
+    double y;
+    double heading;
+};
+
 using namespace vex;
 
 // Calculates the distance to a given target (x, y)
 double distanceTo(double target_x, double target_y);
 
-// Moves the robot to a specified position and orientation
-void moveToPosition(double target_x, double target_y, double target_theta);
-
 // Finds a target object based on the specified type
-DETECTION_OBJECT findTarget(OBJECT type);
-
-// Drives to the closest specified object
-void goToObject(OBJECT type);
+DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map);
 
 // Turns the robot to a specific angle with given tolerance and speed
-void turnTo(double angle, int tolerance, int speed);
+void turnTo(double targetX, double targetY);
 
 // Drives the robot in a specified heading for a given distance and speed
-void driveFor(int heading, double distance, int speed);
+void driveFor(double dist);
 
-void runIntake(vex::directionType dir);
-void runIntake(vex::directionType dir, int rotations, bool driveForward);
+void auton_interaction();
+void auton_isolation();
 
-void stopIntake();
-
-void goToGoal();
+void teleop(void);

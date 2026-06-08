@@ -16,32 +16,33 @@ competition Competition;
 brain Brain;
 controller Controller1 = controller(primary);
 
-motor lf  = motor(PORT15, ratio6_1, false);
-motor lm = motor(PORT4, ratio6_1, true);
-motor lr  = motor(PORT5, ratio6_1, true);
+  motor lf  = motor(PORT15, ratio6_1, false);
+  motor lm = motor(PORT4, ratio6_1, true);
+  motor lr  = motor(PORT5, ratio6_1, true);
 
-motor rf = motor(PORT8, ratio6_1, true);
-motor rm = motor(PORT7, ratio6_1, false);
-motor rr = motor(PORT10, ratio6_1, false);
+  motor rf = motor(PORT8, ratio6_1, true);
+  motor rm = motor(PORT7, ratio6_1, false);
+  motor rr = motor(PORT10, ratio6_1, false);
 
-motor_group leftDriveSmart = motor_group(lf, lm, lr);
-motor_group rightDriveSmart = motor_group(rf, rm, rr);
+  rotation odom = rotation(PORT6, false);
 
-inertial DrivetrainInertial = inertial(PORT3);
+  motor intake = motor(PORT9, ratio6_1, false);
+  motor outtake = motor(PORT14, ratio6_1, true);
+  digital_out outtake_raiser = digital_out(Brain.ThreeWirePort.A);
+  digital_out descore = digital_out(Brain.ThreeWirePort.B);
+  digital_out loader = digital_out(Brain.ThreeWirePort.H);
+  digital_out odomraiser = digital_out(Brain.ThreeWirePort.G);
+  optical OpticalSensor = optical(PORT19);
+  distance FrontDis = distance(PORT18);
 
-gps GPS = gps(PORT12, -152.40, 0.00, mm, 270);
-smartdrive Drivetrain = smartdrive(leftDriveSmart, rightDriveSmart, GPS, 219.44, 320, 40, mm, 1.3333333333333333);
+  inertial DrivetrainInertial = inertial(PORT3);
 
-rotation odom = rotation(PORT6, false);
+  gps GPS = gps(PORT11, -152.40, 0.00, mm, 270);
 
-motor intake = motor(PORT9, ratio6_1, false);
-motor outtake = motor(PORT2, ratio6_1, true);
-digital_out outtake_raiser = digital_out(Brain.ThreeWirePort.A);
-digital_out descore = digital_out(Brain.ThreeWirePort.B);
-digital_out loader = digital_out(Brain.ThreeWirePort.H);
-digital_out odomraiser = digital_out(Brain.ThreeWirePort.G);
-optical OpticalSensor = optical(PORT19);
-distance FrontDis = distance(PORT18);
+  motor_group leftDriveSmart = motor_group(lf, lm, lr);
+  motor_group rightDriveSmart = motor_group(rf, rm, rr);
+  smartdrive Drivetrain = smartdrive(leftDriveSmart, rightDriveSmart, GPS, 219.44, 320, 40, mm, 1.3333333333333333);
+
 
 
 // create instance of jetson class to receive location and other
@@ -64,7 +65,7 @@ ai::jetson  jetson_comms;
 // ai::robot_link       link(PORT7, "6599A_AI_robot", linkType::manager );
 // #else
 // #pragma message("building for the worker")
-ai::robot_link       link(PORT7, "6599A_AI_robot", linkType::worker );
+ai::robot_link       link(PORT1, "6599A_AI_robot", linkType::manager );
 // #endif
 
 bool firstAutoFlag = true;
@@ -84,7 +85,13 @@ int main() {
   
   int32_t loop_time = 33; // Run at about 15Hz
 
-  //DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
+  GPS.calibrate();
+  waitUntil(!(GPS.isCalibrating()));
+
+  DrivetrainInertial.calibrate();
+  waitUntil(!(DrivetrainInertial.isCalibrating()));
+
+  DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
   
   // start the status update display
   thread t1(dashboardTask);
@@ -101,22 +108,22 @@ int main() {
   // when using VEXcode.
   //
   //FILE *fp = fopen("/dev/serial2","wb");
-  this_thread::sleep_for(loop_time);
+  // this_thread::sleep_for(loop_time);
 
-  while(1) {
-      // get last map data
-      jetson_comms.get_data( &local_map );
+  // while(1) {
+  //     // get last map data
+  //     jetson_comms.get_data( &local_map );
 
-      // set our location to be sent to partner robot
-      link.set_remote_location( local_map.pos.x, local_map.pos.y, local_map.pos.az, local_map.pos.status );
+  //     // set our location to be sent to partner robot
+  //     link.set_remote_location( local_map.pos.x, local_map.pos.y, local_map.pos.az, local_map.pos.status );
 
-      // fprintf(fp, "%.2f %.2f %.2f\n", local_map.pos.x, local_map.pos.y, local_map.pos.az)
+  //     // fprintf(fp, "%.2f %.2f %.2f\n", local_map.pos.x, local_map.pos.y, local_map.pos.az)
 
-      // request new data    
-      // NOTE: This request should only happen in a single task.    
-      jetson_comms.request_map();
+  //     // request new data    
+  //     // NOTE: This request should only happen in a single task.    
+  //     jetson_comms.request_map();
 
-      // Allow other tasks to run
-      this_thread::sleep_for(loop_time);
-  }
+  //     // Allow other tasks to run
+  //     this_thread::sleep_for(loop_time);
+  // }
 }

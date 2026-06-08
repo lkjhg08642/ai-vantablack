@@ -13,16 +13,17 @@
 
 using namespace vex;
 
+AI_RECORD local_map;
+float currX, currY, currH;
+
 // Display various useful information about the Jetson
 
-static void
-dashboardJetson( int ox, int oy, int width, int height ) {
+static void dashboardJetson( int ox, int oy, int width, int height ) {
   static int32_t     last_data = 0;
   static int32_t     last_packets = 0;
   static int32_t     total_data = 0;
   static int32_t     total_packets = 0;
   static uint32_t    update_time = 0;
-  static AI_RECORD  local_map;
   color grey = vex::color(0x404040);
 
   Brain.Screen.setClipRegion( ox, oy, width, height);
@@ -80,8 +81,7 @@ dashboardJetson( int ox, int oy, int width, int height ) {
 //
 // Display various useful information about VEXlink
 //
-static void
-dashboardVexlink( int ox, int oy, int width, int height ) {
+static void dashboardVexlink( int ox, int oy, int width, int height ) {
   static int32_t last_data = 0;
   static int32_t last_packets = 0;
   static int32_t total_data = 0;
@@ -136,30 +136,33 @@ dashboardVexlink( int ox, int oy, int width, int height ) {
   float x,y,heading;
   int32_t status;
   link.get_local_location(x, y, heading, status);
-  heading = heading + 4;
-  x = x / 0.0254 - 6 * cos(heading);
-  y = y / 0.0254 + 6 * sin(heading);
+  x = x / 0.0254;
+  y = y / 0.0254;
+  
+  currX = x;
+  currY = y;
+  //currH = heading;
+  currH = DrivetrainInertial.heading(rotationUnits::deg);
 
+  Controller1.Screen.setCursor(2, 1);
+  Controller1.Screen.print("(%.0f, %.0f)", currX, currY);
   oy += 10;
   if(status & POS_GPS_CONNECTED)
     Brain.Screen.printAt( ox + 10, oy += 15, "Location: local (GPS_OK)");
   else
     Brain.Screen.printAt( ox + 10, oy += 15, "Location: local (no GPS)");
   
-  Brain.Screen.printAt( ox + 10, oy += 15, " X:   s%.2f", x);  // mm -> inches
-  Brain.Screen.printAt( ox + 10, oy += 15, " Y:   %.2f", y);  // mm -> inches
-  Brain.Screen.printAt( ox + 10, oy += 15, " H:   %.2f", heading); // rads to deg
+  Brain.Screen.printAt( ox + 10, oy += 15, " X:   %.2f", currX /*/ -25.4*/);  // mm -> inches
+  Brain.Screen.printAt( ox + 10, oy += 15, " Y:   %.2f", currY /*/ -25.4*/);  // mm -> inches
+  Brain.Screen.printAt( ox + 10, oy += 15, " H:   %.2f", currH/*180 - (heading / (-2 * M_PI ) * 360)*/ ); // rads to deg
 
   oy += 5;
   Brain.Screen.printAt( ox + 10, oy += 15, "Location: remote");
   
   link.get_remote_location(x, y, heading);
-  heading = heading;
-  x = x / 0.0254;
-  y = y / 0.0254;
   
-  Brain.Screen.printAt( ox + 10, oy += 15, " X:   %.2f", x);  // mm -> inches
-  Brain.Screen.printAt( ox + 10, oy += 15, " Y:   %.2f", y);  // mm -> inches
+  Brain.Screen.printAt( ox + 10, oy += 15, " X:   %.2f", x /*/ -25.4*/);  // mm -> inches
+  Brain.Screen.printAt( ox + 10, oy += 15, " Y:   %.2f", y /*/ -25.4*/);  // mm -> inches
   Brain.Screen.printAt( ox + 10, oy += 15, " H:   %.2f", heading/*180 - (heading / (-2 * M_PI ) * 360)*/ ); // rads to deg
 }
 
@@ -168,12 +171,15 @@ dashboardVexlink( int ox, int oy, int width, int height ) {
 //
 int dashboardTask() {
   while(true) {
+    jetson_comms.get_data(&local_map);
+    link.set_remote_location(local_map.pos.x, local_map.pos.y, local_map.pos.az, local_map.pos.status);
+    jetson_comms.request_map();
     // status
-    dashboardJetson(    0, 0, 280, 240 );
+    dashboardJetson( 0, 0, 280, 240 );
     dashboardVexlink( 279, 0, 201, 240 );
     // draw, at 30Hz
     Brain.Screen.render();
-    this_thread::sleep_for(16);
+    this_thread::sleep_for(10);
   }
   return 0;
 }

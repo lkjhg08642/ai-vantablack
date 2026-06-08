@@ -23,6 +23,10 @@ extern digital_out odomraiser;
 extern optical OpticalSensor;
 extern distance FrontDis;
 
+extern float currX, currY, currH;
+extern AI_RECORD local_map;
+
+
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.
  *

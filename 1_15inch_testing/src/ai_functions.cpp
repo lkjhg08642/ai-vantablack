@@ -21,11 +21,6 @@
 using namespace vex;
 using namespace std;
 
-#include "vex.h"
-#include <vector>
-#include <queue>
-#include <cmath>
-
 bool intakemotorrunning;
 
 // Robot constants
@@ -326,6 +321,8 @@ void forwardStraight(double fdistance) {
     double AngleTolerance = 0.25;   // maintain angle +- 0.25 degrees
     double percentChange  = 1.1;
 
+    double timeoutSec = fabs(distanceEncoder) / (minSpeed * 6.0);
+
     // VEX has no STOP_AND_RESET_ENCODER + RUN_TO_POSITION. Reset encoders
     // and drive by velocity, ending the loop when we reach the target count.
     frontLeft.resetPosition();
@@ -336,7 +333,13 @@ void forwardStraight(double fdistance) {
     // Direction of travel (sign of the requested distance).
     double dir = (distanceEncoder >= 0) ? 1.0 : -1.0;
 
+    vex::timer moveTimer;
+    moveTimer.clear();
+
     while (fabs(currentPos) < fabs(distanceEncoder)) {
+
+        if (moveTimer.time(vex::timeUnits::sec) > timeoutSec) break;
+
         currentPos   = backLeft.position(degrees);
         currentAngle = DrivetrainInertial.heading(degrees);
 
@@ -448,6 +451,7 @@ void autoOuttakeHigh(int time) {
     outtake.spin(directionType::fwd, 100, velocityUnits::pct);
     intake.spin(vex::directionType::fwd, 100, percent);
     wait(time, timeUnits::msec);
+    intake.stop();
     outtake.stop();
 }
 
@@ -455,6 +459,7 @@ void autoOuttakeMidHigh(int time) {
     outtake.spin(directionType::fwd, 100, velocityUnits::pct);
     intake.spin(vex::directionType::fwd, 100, percent);
     wait(time, timeUnits::msec);
+    intake.stop();
     outtake.stop();
 }
 
@@ -462,6 +467,7 @@ void autoOuttakeMidLow(int time) {
     outtake.spin(directionType::rev, 100, velocityUnits::pct);
     intake.spin(vex::directionType::rev, 100, percent);
     wait(time, timeUnits::msec);
+    intake.stop();
     outtake.stop();
 }
 
@@ -641,23 +647,22 @@ void auton_isolation(){
     turnToAbsolute(0);
     intakemotorrunning = true;
     vex::task t1(autoIntake);
-    forwardStraight(20.0);
+    forwardStraight(19.0);
     // driveFor(20.0, 0.5);
-    moveToPosition(-36, 24);
+    moveToPosition(-40, 24);
     intakemotorrunning = false;
     turnToAbsolute(0);
     leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
     rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-    while(FrontDis.objectDistance(inches) > 23.0) { 
+    while(FrontDis.objectDistance(mm) > 510) { 
         wait(20, timeUnits::msec);
     }
     leftDriveSmart.stop(brake);
     rightDriveSmart.stop(brake);
-    turnToAbsolute(265);
+    turnToAbsolute(275);
     slideUpTo(350);
-    forwardStraight(-18.0);
-    // driveFor(-18.0, 1);
-    autoOuttakeHigh(1000);
+    forwardStraight(-16.0);
+    autoOuttakeHigh(4000);
 }
 
 void auton_interaction(){
@@ -712,7 +717,7 @@ void teleop(void) {
 
 
     if (Controller1.ButtonY.pressing()) {
-        pathFindTo(-48, 48);
+        pathFindTo(48, -48);
     }
 
     if (Controller1.ButtonA.pressing()) {

@@ -34,15 +34,15 @@ int field[N][N] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1/**/,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
@@ -66,15 +66,15 @@ int field[N][N] = {
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
@@ -187,7 +187,7 @@ int extractTurns(int pathR[], int pathC[], int len, int turnR[], int turnC[]) {
 
 ScoringPos getScoringPos(SCORING_LOCATIONS location) {
     switch (location) {
-        case RED_HIGH_LEFT:   return {-40,   47,    270};
+        case RED_HIGH_LEFT:   return {-40,   43,    270};
         case RED_HIGH_RIGHT:  return {-37,  -47,  270};
         case RED_MID_LEFT:    return {-16,   13.5,  311};
         case RED_MID_RIGHT:   return {-15.5, -18,    43};
@@ -487,21 +487,29 @@ double distanceTo(double target_x, double target_y){
     return distance;
 }
 
-// Function to find the target object based on type and return its record
 DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map){
     DETECTION_OBJECT target;
-    double lowestDist = 1000000000;
+    target.classID = -1;          // sentinel: -1 means "no target found"
+    double lowestDist = 1e9;
 
-    // Iterate through detected objects to find the closest target of the specified type
-    for(int i = 0; i < local_map.detectionCount; i++) {
-        double distance = distanceTo(local_map.detections[i].mapLocation.x / 0.0254, local_map.detections[i].mapLocation.y / 0.0254);
-        if (distance < lowestDist && local_map.detections[i].classID == (int) type) {
-            target = local_map.detections[i];
+    for (int i = 0; i < local_map.detectionCount; i++) {
+        if (local_map.detections[i].classID != (int) type) continue;
+
+        double bx = local_map.detections[i].mapLocation.x / 0.0254;  // m -> in
+        double by = local_map.detections[i].mapLocation.y / 0.0254;
+
+        // reject blocks inside a blocked area
+        int row, col;
+        GPStoGrid(bx, by, row, col);
+        if (field[row][col] == 1) continue;
+
+        double distance = distanceTo(bx, by);
+        if (distance < lowestDist) {
             lowestDist = distance;
+            target = local_map.detections[i];
         }
     }
-
-    return target;
+    return target;   // caller checks target.classID == -1 for "none"
 }
 
 void slideUpTo(double destinationAngle) {
@@ -576,36 +584,7 @@ int autoIntake() {
     return 1;
 }
 
-void scoreIn(SCORING_LOCATIONS location, int time) {
-    ScoringPos pos = getScoringPos(location);
-    moveToPosition(pos.x, pos.y);
-    turnToAbsolute(pos.heading);
-    if (location == RED_HIGH_LEFT || location == RED_HIGH_RIGHT || location == BLUE_HIGH_LEFT || location == BLUE_HIGH_RIGHT) {
-        slideUpTo(350); // Raise to high goal
-        driveFor(-15.0, 1); // Drive forward to score
-        autoOuttakeHigh(time);
-    } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
-        slideMoveToBottomPosition();
-        driveFor(-8.0, 1); // Drive forward to score
-        autoOuttakeMidHigh(time);
-    }
-    else{
-        slideMoveToBottomPosition();
-        driveFor(8.0, 1); // Drive forward to score
-        autoOuttakeMidLow(time);
-    }
-}
-
-void intakeTarget (DETECTION_OBJECT target) {
-    double targetX = target.mapLocation.x / 0.0254; // Convert from meters to inches
-    double targetY = target.mapLocation.y / 0.0254; // Convert from meters to inches
-    intakemotorrunning = true;
-    vex::task t1(autoIntake);
-    moveToPosition(targetX, targetY);
-    intakemotorrunning = false;
-}
-
-void pathFindTo(double destX, double destY) {
+bool pathFindTo(double destX, double destY) {
     double startX = currX, startY =  currY;
 
     int sr, sc, gr, gc;
@@ -617,6 +596,7 @@ void pathFindTo(double destX, double destY) {
 
     if (len == 0) {
         Brain.Screen.print("No path found");
+        return false;
     }
 
     int turnR[N*N], turnC[N*N];
@@ -633,6 +613,63 @@ void pathFindTo(double destX, double destY) {
         wait(500, timeUnits::msec);
         moveToPosition(wx, wy);
     }
+    return true;
+}
+
+void scoreIn(SCORING_LOCATIONS location, int time) {
+    ScoringPos pos = getScoringPos(location);
+    bool pathFound = pathFindTo(pos.x, pos.y);
+    if (pathFound){
+        if (location == RED_HIGH_LEFT || location == RED_HIGH_RIGHT || location == BLUE_HIGH_LEFT || location == BLUE_HIGH_RIGHT) {
+            if (location == RED_HIGH_LEFT || location == BLUE_HIGH_RIGHT){
+                turnToAbsolute(0);
+            } else{
+                turnToAbsolute(180);
+            }
+            if (FrontDis.objectDistance(mm) > 520) {
+                leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+                rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+                while(FrontDis.objectDistance(mm) > 510) { 
+                    wait(20, timeUnits::msec);
+                }
+                leftDriveSmart.stop(brake);
+                rightDriveSmart.stop(brake);
+            }
+            else if(FrontDis.objectDistance(mm) < 480){
+                leftDriveSmart.spin(vex::directionType::rev, 3, vex::voltageUnits::volt);
+                rightDriveSmart.spin(vex::directionType::rev, 3, vex::voltageUnits::volt);
+                while(FrontDis.objectDistance(mm) < 490) { 
+                    wait(20, timeUnits::msec);
+                }
+                leftDriveSmart.stop(brake);
+                rightDriveSmart.stop(brake);
+            }
+            turnToAbsolute(pos.heading);
+            slideUpTo(350); // Raise to high goal
+            forwardStraight(-15.0); // Drive forward to score
+            autoOuttakeHigh(time);
+        } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
+            slideMoveToBottomPosition();
+            forwardStraight(-8.0); // Drive forward to score
+            autoOuttakeMidHigh(time);
+        }
+        else{
+            slideMoveToBottomPosition();
+            forwardStraight(8.0); // Drive forward to score
+            autoOuttakeMidLow(time);
+        }
+    }
+}
+
+bool intakeTarget (DETECTION_OBJECT target) {
+    double targetX = target.mapLocation.x / 0.0254; // Convert from meters to inches
+    double targetY = target.mapLocation.y / 0.0254; // Convert from meters to inches
+    intakemotorrunning = true;
+    vex::task t1(autoIntake);
+    bool pathFound = pathFindTo(targetX, targetY);
+    wait(300, timeUnits::msec); // Wait for the robot to stabilize at the target position
+    intakemotorrunning = false;
+    return pathFound;
 }
 
 void auton_isolation(){
@@ -717,7 +754,7 @@ void teleop(void) {
 
 
     if (Controller1.ButtonY.pressing()) {
-        pathFindTo(48, -48);
+        scoreIn(RED_HIGH_LEFT, 2000);
     }
 
     if (Controller1.ButtonA.pressing()) {

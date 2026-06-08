@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-PnpDevice -Class Ports)",
+      "PowerShell($port = [System.IO.Ports.SerialPort]::GetPortNames\\(\\); $port)",
+      "PowerShell($handle = \\(& \"C:\\\\Windows\\\\System32\\\\handle.exe\" -a \"\\\\Device\\\\Serial5\" 2>$null\\); if \\(-not $handle\\) { \"handle.exe not found - trying alternate method\" }; Get-Process | Where-Object { try { $_.Modules | Where-Object { $_.FileName -match \"serial|com\" } } catch { $false } } | Select-Object Name, Id)"
+    ]
+  }
+}

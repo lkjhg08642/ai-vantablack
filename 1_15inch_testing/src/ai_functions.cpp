@@ -44,12 +44,12 @@ int field[N][N] = {
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
@@ -59,8 +59,8 @@ int field[N][N] = {
     {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
@@ -79,6 +79,52 @@ int field[N][N] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
+
+// ---------- Clearance cost field ----------
+// Higher cost near obstacles so A* prefers routes through open space.
+double clearanceCost[N][N];
+
+const double CLEAR_RADIUS = 5.0;   // cells: how far the "stay away" influence reaches
+const double CLEAR_WEIGHT = 12.0;  // how strongly to avoid obstacles (raise = wider berth)
+
+// For each free cell, compute distance (in cells) to the nearest obstacle via
+// multi-source BFS, then turn that into a penalty. Call once at startup.
+void computeClearanceCost() {
+    static double dist[N][N];
+    std::queue<std::pair<int,int>> q;
+
+    // Seed the BFS: every obstacle is a source at distance 0.
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < N; c++) {
+            if (field[r][c] == 1) { dist[r][c] = 0.0; q.push({r, c}); }
+            else                    dist[r][c] = 1e9;
+        }
+
+    // BFS outward into free space (4-connected).
+    int dR[4] = {-1, 1, 0, 0};
+    int dC[4] = {0, 0, -1, 1};
+    while (!q.empty()) {
+        std::pair<int,int> cur = q.front(); q.pop();
+        int r = cur.first, c = cur.second;
+        for (int k = 0; k < 4; k++) {
+            int nr = r + dR[k], nc = c + dC[k];
+            if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+            if (dist[nr][nc] > dist[r][c] + 1.0) {
+                dist[nr][nc] = dist[r][c] + 1.0;
+                q.push({nr, nc});
+            }
+        }
+    }
+
+    // Convert distance to penalty: cells within CLEAR_RADIUS of an obstacle
+    // pay extra; farther cells pay nothing. Obstacles themselves stay 0.
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < N; c++) {
+            if (field[r][c] == 1) { clearanceCost[r][c] = 0.0; continue; }
+            double pen = (CLEAR_RADIUS - dist[r][c]) * (CLEAR_WEIGHT / CLEAR_RADIUS);
+            clearanceCost[r][c] = (pen > 0.0) ? pen : 0.0;
+        }
+}
 
 // ---------- Coordinate conversions ----------
 const double CELL = 3.0;       // inches per grid cell
@@ -105,25 +151,58 @@ int heuristic(int r, int c, int gr, int gc) {
     return abs(r - gr) + abs(c - gc);   // Manhattan
 }
 
+// ---------- Snap a cell to the nearest free (value 0) cell ----------
+// BFS outward from (r,c). If (r,c) is already free, returns it unchanged.
+// Sets outR/outC to the nearest free cell. Returns false if the whole grid
+// is blocked (should never happen on a real field).
+bool nearestFreeCell(int r, int c, int &outR, int &outC) {
+    if (field[r][c] == 0) { outR = r; outC = c; return true; }
+
+    static bool seen[N][N];
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++) seen[i][j] = false;
+
+    std::queue<std::pair<int,int>> q;
+    seen[r][c] = true;
+    q.push({r, c});
+
+    int dR[4] = {-1, 1, 0, 0};
+    int dC[4] = {0, 0, -1, 1};
+
+    while (!q.empty()) {
+        std::pair<int,int> cur = q.front(); q.pop();
+        int cr = cur.first, cc = cur.second;
+        for (int k = 0; k < 4; k++) {
+            int nr = cr + dR[k], nc = cc + dC[k];
+            if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+            if (seen[nr][nc]) continue;
+            if (field[nr][nc] == 0) { outR = nr; outC = nc; return true; }  // closest free
+            seen[nr][nc] = true;
+            q.push({nr, nc});
+        }
+    }
+    return false;   // no free cell anywhere
+}
+
 // Fills pathR/pathC with the route, returns number of cells (0 if no path)
 int aStar(int sr, int sc, int gr, int gc, int pathR[], int pathC[]) {
-    static int  gScore[N][N];
-    static bool closed[N][N];
-    static int  cameR[N][N], cameC[N][N];
+    static double gScore[N][N];          // <-- double now
+    static bool   closed[N][N];
+    static int    cameR[N][N], cameC[N][N];
 
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++) {
-            gScore[r][c] = 1e8; closed[r][c] = false;
+            gScore[r][c] = 1e18; closed[r][c] = false;
             cameR[r][c] = -1; cameC[r][c] = -1;
         }
 
-    // priority queue: pair<fScore, index(r*N+c)>
-    std::priority_queue<std::pair<int,int>,
-        std::vector<std::pair<int,int>>,
-        std::greater<std::pair<int,int>>> open;
+    // priority queue keyed by double fScore
+    std::priority_queue<std::pair<double,int>,
+        std::vector<std::pair<double,int>>,
+        std::greater<std::pair<double,int>>> open;
 
-    gScore[sr][sc] = 0;
-    open.push({heuristic(sr, sc, gr, gc), sr * N + sc});
+    gScore[sr][sc] = 0.0;
+    open.push({(double)heuristic(sr, sc, gr, gc), sr * N + sc});
 
     int dR[4] = {-1, 1, 0, 0};
     int dC[4] = {0, 0, -1, 1};
@@ -133,25 +212,27 @@ int aStar(int sr, int sc, int gr, int gc, int pathR[], int pathC[]) {
         int r = idx / N, c = idx % N;
         if (closed[r][c]) continue;
         closed[r][c] = true;
-
         if (r == gr && c == gc) break;
 
         for (int k = 0; k < 4; k++) {
             int nr = r + dR[k], nc = c + dC[k];
             if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
-            if (field[nr][nc] == 1) continue;       // obstacle
-            int ng = gScore[r][c] + 1;
+            if (field[nr][nc] == 1) continue;
+
+            // base step cost (1) + clearance penalty for being near a wall
+            double ng = gScore[r][c] + 1.0 + clearanceCost[nr][nc];
+
             if (ng < gScore[nr][nc]) {
                 gScore[nr][nc] = ng;
                 cameR[nr][nc] = r; cameC[nr][nc] = c;
-                open.push({ng + heuristic(nr, nc, gr, gc), nr * N + nc});
+                open.push({ng + (double)heuristic(nr, nc, gr, gc), nr * N + nc});
             }
         }
     }
 
-    if (cameR[gr][gc] == -1 && !(sr == gr && sc == gc)) return 0;  // no path
+    if (cameR[gr][gc] == -1 && !(sr == gr && sc == gc)) return 0;
 
-    // reconstruct (reversed)
+    // reconstruct (unchanged)
     int tmpR[N*N], tmpC[N*N], len = 0;
     int r = gr, c = gc;
     while (!(r == sr && c == sc)) {
@@ -160,8 +241,6 @@ int aStar(int sr, int sc, int gr, int gc, int pathR[], int pathC[]) {
         r = pr; c = pc;
     }
     tmpR[len] = sr; tmpC[len] = sc; len++;
-
-    // reverse into output
     for (int i = 0; i < len; i++) {
         pathR[i] = tmpR[len - 1 - i];
         pathC[i] = tmpC[len - 1 - i];
@@ -183,6 +262,67 @@ int extractTurns(int pathR[], int pathC[], int len, int turnR[], int turnC[]) {
     }
     turnR[t] = pathR[len-1]; turnC[t] = pathC[len-1]; t++;   // destination
     return t;
+}
+
+// ---------- Line-of-sight check (Bresenham) ----------
+// True if a straight line between two cells stays on free cells.
+bool lineOfSight(int r0, int c0, int r1, int c1) {
+    int dr = abs(r1 - r0), dc = abs(c1 - c0);
+    int sr = (r0 < r1) ? 1 : -1;
+    int sc = (c0 < c1) ? 1 : -1;
+    int err = dc - dr;
+    int r = r0, c = c0;
+    while (true) {
+        if (field[r][c] == 1) return false;
+        if (r == r1 && c == c1) break;
+        int e2 = 2 * err;
+        if (e2 > -dr) { err -= dr; c += sc; }
+        if (e2 <  dc) { err += dc; r += sr; }
+    }
+    return true;
+}
+
+// ---------- Minimize turning points via line-of-sight shortcutting ----------
+// Collapses the staircase path to the fewest waypoints that preserve a clear route.
+int smoothPath(int pathR[], int pathC[], int len, int smR[], int smC[]) {
+    if (len == 0) return 0;
+    int count = 0, anchor = 0;
+    smR[count] = pathR[0]; smC[count] = pathC[0]; count++;
+    int i = 1;
+    while (i < len - 1) {
+        if (lineOfSight(pathR[anchor], pathC[anchor], pathR[i + 1], pathC[i + 1])) {
+            i++;                               // anchor can still see further
+        } else {
+            smR[count] = pathR[i]; smC[count] = pathC[i]; count++;  // lock corner
+            anchor = i; i++;
+        }
+    }
+    smR[count] = pathR[len - 1]; smC[count] = pathC[len - 1]; count++;
+    return count;
+}
+
+// ---------- Catmull-Rom spline: dense smooth points through waypoints ----------
+int catmullRom(double wpX[], double wpY[], int n,
+               double outX[], double outY[], int samplesPerSeg) {
+    if (n < 2) {
+        if (n == 1) { outX[0] = wpX[0]; outY[0] = wpY[0]; return 1; }
+        return 0;
+    }
+    int count = 0;
+    for (int i = 0; i < n - 1; i++) {
+        double p0x = wpX[(i == 0) ? 0 : i - 1], p0y = wpY[(i == 0) ? 0 : i - 1];
+        double p1x = wpX[i],     p1y = wpY[i];
+        double p2x = wpX[i + 1], p2y = wpY[i + 1];
+        double p3x = wpX[(i + 2 >= n) ? n - 1 : i + 2], p3y = wpY[(i + 2 >= n) ? n - 1 : i + 2];
+        for (int s = 0; s < samplesPerSeg; s++) {
+            double t = (double)s / samplesPerSeg, t2 = t*t, t3 = t2*t;
+            outX[count] = 0.5*((2*p1x)+(-p0x+p2x)*t+(2*p0x-5*p1x+4*p2x-p3x)*t2+(-p0x+3*p1x-3*p2x+p3x)*t3);
+            outY[count] = 0.5*((2*p1y)+(-p0y+p2y)*t+(2*p0y-5*p1y+4*p2y-p3y)*t2+(-p0y+3*p1y-3*p2y+p3y)*t3);
+            count++;
+        }
+    }
+    outX[count] = wpX[n-1]; outY[count] = wpY[n-1]; count++;
+    return count;
 }
 
 ScoringPos getScoringPos(SCORING_LOCATIONS location) {
@@ -210,7 +350,7 @@ void turnToAbsolute(double theta) {
   // PID constants - tune these for your robot
   double kP = 0.4;    // small: less overshoot, more like a gentle spring; large: more aggressive correction but can overshoot and oscillate
   double kI = 0.05;   // small: integral builds slowly, good for correcting steady-state error without causing instability; large: integral builds quickly, can eliminate steady-state error faster but may cause overshoot and oscillation
-  double kD = 0.03;   // small: derivative is now scaled to deg/s and filtered
+  double kD = 0.035;   // small: derivative is now scaled to deg/s and filtered
 
   double integral = 0;
   double prevError = 0;
@@ -220,7 +360,7 @@ void turnToAbsolute(double theta) {
   const double dt = 0.01;            // 10 ms, matches wait() below
 
   // Tolerance settings
-  double errorThreshold = 0.75;      // degrees
+  double errorThreshold = 0.8;      // degrees
   double velocityThreshold = 8.0;    // deg/s of actual rotation to consider stopped
   int settleCount = 0;
   int settleTarget = 10;             // loops within tolerance before exiting
@@ -585,33 +725,38 @@ int autoIntake() {
 }
 
 bool pathFindTo(double destX, double destY) {
-    double startX = currX, startY =  currY;
+    static bool clearanceReady = false;
+    if (!clearanceReady) { computeClearanceCost(); clearanceReady = true; }
 
     int sr, sc, gr, gc;
-    GPStoGrid(startX, startY, sr, sc);
+    GPStoGrid(currX, currY, sr, sc);
     GPStoGrid(destX,  destY,  gr, gc);
 
-    int pathR[N*N], pathC[N*N];
+    // --- snap start and destination out of any blocked cell ---
+    int sr2, sc2, gr2, gc2;
+    if (!nearestFreeCell(sr, sc, sr2, sc2)) { Brain.Screen.print("No free start"); return false; }
+    if (!nearestFreeCell(gr, gc, gr2, gc2)) { Brain.Screen.print("No free dest");  return false; }
+    sr = sr2; sc = sc2;
+    gr = gr2; gc = gc2;
+
+    static int pathR[N*N], pathC[N*N];
     int len = aStar(sr, sc, gr, gc, pathR, pathC);
+    if (len == 0) { Brain.Screen.print("No path found"); return false; }
 
-    if (len == 0) {
-        Brain.Screen.print("No path found");
-        return false;
-    }
+    static int smR[N*N], smC[N*N];
+    int pts = smoothPath(pathR, pathC, len, smR, smC);
 
-    int turnR[N*N], turnC[N*N];
-    int turns = extractTurns(pathR, pathC, len, turnR, turnC);
+    static double wpX[N*N], wpY[N*N];
+    for (int i = 0; i < pts; i++)
+        gridToGPS(smR[i], smC[i], wpX[i], wpY[i]);
 
-    // Print + drive the turning waypoints in GPS coordinates
-    Brain.Screen.print("Turn waypoints (GPS in):");
-    Brain.Screen.newLine();
-    for (int i = 0; i < turns; i++) {
-        double wx, wy;
-        gridToGPS(turnR[i], turnC[i], wx, wy);
-        Controller1.Screen.setCursor(1, 1);
-        Controller1.Screen.print("(%.0f, %.0f)", wx, wy);
-        wait(500, timeUnits::msec);
-        moveToPosition(wx, wy);
+    static double curveX[N*N], curveY[N*N];
+    int cn = catmullRom(wpX, wpY, pts, curveX, curveY, 4);
+
+    for (int i = 1; i < cn; i++) {
+        Controller1.Screen.setCursor(1,1);
+        Controller1.Screen.print("(%.2f, %.2f)", curveX[i], curveY[i]);
+        moveToPosition(curveX[i], curveY[i]);
     }
     return true;
 }
@@ -754,11 +899,14 @@ void teleop(void) {
 
 
     if (Controller1.ButtonY.pressing()) {
-        scoreIn(RED_HIGH_LEFT, 2000);
+        // turnToRelative(90);
+        
+        pathFindTo(-40,24);
+        //scoreIn(RED_HIGH_LEFT, 2000);
     }
 
     if (Controller1.ButtonA.pressing()) {
-        forwardStraight(20.0);
+        turnToRelative(-90);
     }
 
     if (Controller1.ButtonUp.pressing()) {

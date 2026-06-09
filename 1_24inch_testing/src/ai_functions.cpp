@@ -214,9 +214,9 @@ double wrapAngle(double angle) {
 
 void turnToAbsolute(double theta) {
   // PID constants - tune these for your robot
-  double kP = 0.4;    // small: less overshoot, more like a gentle spring; large: more aggressive correction but can overshoot and oscillate
-  double kI = 0.05;   // small: integral builds slowly, good for correcting steady-state error without causing instability; large: integral builds quickly, can eliminate steady-state error faster but may cause overshoot and oscillation
-  double kD = 0.03;   // small: derivative is now scaled to deg/s and filtered
+  double kP = 0.38;
+  double kI = 0.06;
+  double kD = 0.03;
 
   double integral = 0;
   double prevError = 0;
@@ -226,15 +226,27 @@ void turnToAbsolute(double theta) {
   const double dt = 0.01;            // 10 ms, matches wait() below
 
   // Tolerance settings
-  double errorThreshold = 0.75;      // degrees
+  double errorThreshold = 0.8;       // degrees
   double velocityThreshold = 8.0;    // deg/s of actual rotation to consider stopped
   int settleCount = 0;
   int settleTarget = 10;             // loops within tolerance before exiting
 
   double integralLimit = 50.0;       // anti-windup cap
-  double minVolt = 2.5;              // static-friction floor (tune 1.0-2.0)
+  double minVolt = 2.5;              // static-friction floor
+
+  // ---- Timeout: give up after this long regardless of settling ----
+  double timeoutSec = 2.0;           // tune: enough for a full ~180 turn + settle
+  vex::timer turnTimer;
+  turnTimer.clear();
+  bool timedOut = false;
 
   while (true) {
+    // ---- timeout check ----
+    if (turnTimer.time(vex::timeUnits::sec) > timeoutSec) {
+      timedOut = true;
+      break;
+    }
+
     // Compute error as shortest angular distance to target [-180, 180]
     double current = DrivetrainInertial.heading(degrees);
     error = theta - current;
@@ -250,7 +262,7 @@ void turnToAbsolute(double theta) {
     if (integral > integralLimit) integral = integralLimit;
     if (integral < -integralLimit) integral = -integralLimit;
 
-    // Derivative, scaled to deg/s and low-pass filtered to kill the end twitch
+    // Derivative, scaled to deg/s and low-pass filtered
     double rawD = (error - prevError) / dt;
     derivativeFiltered = 0.7 * derivativeFiltered + 0.3 * rawD;
     double derivative = derivativeFiltered;
@@ -271,7 +283,7 @@ void turnToAbsolute(double theta) {
     leftDriveSmart.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
     rightDriveSmart.spin(vex::directionType::rev, output, vex::voltageUnits::volt);
 
-    // Settle check now uses real rotational velocity (deg/s)
+    // Settle check uses real rotational velocity (deg/s)
     if (fabs(error) < errorThreshold && fabs(derivative) < velocityThreshold) {
       settleCount++;
       if (settleCount >= settleTarget) break;
@@ -290,6 +302,12 @@ void turnToAbsolute(double theta) {
 
   leftDriveSmart.stop(brake);
   rightDriveSmart.stop(brake);
+
+  // Optional: surface a timeout so callers/you can see it on the brain
+  if (timedOut) {
+    Brain.Screen.clearLine();
+    Brain.Screen.print("turnToAbsolute timeout");
+  }
 }
 
 void turnToRelative(double theta) {
@@ -312,15 +330,15 @@ void turnTo(double targetX, double targetY) {
 }
 
 void forwardStraight(double fdistance) {
-    double fbcoef = 51;  // convert inches to motor degrees
+    double fbcoef = 56;  // convert inches to motor degrees
     double distanceEncoder = fbcoef * fdistance;
     double currentPos = 0;
     double posDifference;
     double instantV = 0;
     double thresholdBegin = 10 * fbcoef;
-    double thresholdEnd   = 20 * fbcoef;
-    double minSpeed = 130.0;
-    double maxSpeed = 600.0;
+    double thresholdEnd   = 30 * fbcoef;
+    double minSpeed = 125.0;
+    double maxSpeed = 500.0;
     double currentAngle = DrivetrainInertial.heading(degrees);
     double angle = currentAngle;
 
@@ -361,17 +379,17 @@ void forwardStraight(double fdistance) {
         // Heading correction. Velocities are in RPM here (VEX velocityUnits::rpm).
         if ((currentAngle - angle) > AngleTolerance) {
             // turn right a little bit
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
             rightDriveSmart.spin(vex::directionType::fwd, dir * instantV*0.02,                 vex::voltageUnits::volt);
+            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
             
         } else if ((currentAngle - angle) < (-AngleTolerance)) {
             // turn left a little bit
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02,                 vex::voltageUnits::volt);
             rightDriveSmart.spin(vex::directionType::fwd, dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
+            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02,                 vex::voltageUnits::volt);
             
         } else {
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02, vex::voltageUnits::volt);
             rightDriveSmart.spin(vex::directionType::fwd, dir * instantV * 0.02, vex::voltageUnits::volt);
+            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02, vex::voltageUnits::volt);
            
         }
 
@@ -714,8 +732,10 @@ void teleop(void) {
 
 
     if (Controller1.ButtonY.pressing()) { 
-        turnToAbsolute(0);
-        turnToAbsolute(90);
+        pathFindTo(-24.0, 24.0);
+    }
+    if (Controller1.ButtonA.pressing()) { 
+        forwardStraight(-71.5);
     }
 
     if (Controller1.ButtonX.pressing()) { 

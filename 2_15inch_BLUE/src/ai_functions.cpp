@@ -952,11 +952,11 @@ void auton_isolation(){
     forwardStraight(distance, 350.0);
     
     wait(500, timeUnits::msec);
-    turnToReverse(-23.75, 46.5);
-    distance = distanceTo(-23.75, 46.5);
+    turnToReverse(-23.75, 46);
+    distance = distanceTo(-23.75, 46);
     intakemotorrunning = false;
     vex::task t3(slideUpToHigh);
-    forwardStraight(-distance - 2);
+    forwardStraight(-distance);
 
     autoOuttakeHigh(2000, 8);
 }

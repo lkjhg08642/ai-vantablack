@@ -35,6 +35,8 @@ bool odom_raised = false;
 bool loader_dropped = false;
 bool descore_raised = false;
 
+int currColor = 0; //0 blue, 1 red
+
 const int N = 47;
 int field[N][N] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1/**/,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -469,7 +471,7 @@ void turnTo(double targetX, double targetY) {
     turnToAbsolute(targetHeading);
 }
 
-void forwardStraight(double fdistance) {
+void forwardStraight(double fdistance, double maxRPM = 600.0) {
     double fbcoef = 56;  // convert inches to motor degrees
     double distanceEncoder = fbcoef * fdistance;
     double currentPos = 0;
@@ -478,7 +480,7 @@ void forwardStraight(double fdistance) {
     double thresholdBegin = 10 * fbcoef;
     double thresholdEnd   = 30 * fbcoef;
     double minSpeed = 125.0;
-    double maxSpeed = 500.0;
+    double maxSpeed = maxRPM;
     double currentAngle = DrivetrainInertial.heading(degrees);
     double angle = currentAngle;
 
@@ -558,13 +560,13 @@ double distanceTo(double target_x, double target_y){
 }
 
 // Function to find the target object based on type and return its record
-DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map){
+DETECTION_OBJECT findTarget(AI_RECORD local_map){
     DETECTION_OBJECT target;
     target.classID = -1;          // sentinel: -1 means "no target found"
     double lowestDist = 1e9;
 
     for (int i = 0; i < local_map.detectionCount; i++) {
-        if (local_map.detections[i].classID != (int) type) continue;
+        if (local_map.detections[i].classID != currColor) continue;
 
         double bx = local_map.detections[i].mapLocation.x / 0.0254;  // m -> in
         double by = local_map.detections[i].mapLocation.y / 0.0254;
@@ -581,6 +583,67 @@ DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map){
         }
     }
     return target;   // caller checks target.classID == -1 for "none"
+}
+
+int blockColor(){ // 0 blue, 1 red, 2 none
+    float hue; 
+    hue = OpticalSensor.hue();
+
+    if(hue < 20 && hue >0){return 1;}
+    if(hue < 220 && hue >200){return 0;}
+    return 2;
+}
+
+int autoIntakeColor() {
+    
+    intakemotorrunning = true;
+    
+    // Configure standard motor brake modes
+    intake.setStopping(brakeType::brake);
+    outtake.setStopping(brakeType::hold);
+
+    while (intakemotorrunning) {
+        // Spin intake at full speed (100%) and hold the outtake still
+        intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
+        outtake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+        
+        // Initial 1-second delay
+        wait(1000, timeUnits::msec);
+        
+        // Monitor intake motor speed drop-off (stalling/loading checks)
+        while (std::abs(intake.velocity(velocityUnits::rpm)) > 400 && intakemotorrunning) {
+            wait(20, timeUnits::msec);
+        }
+        
+        // Feed the outtake roller at 80% power
+        outtake.spin(vex::directionType::fwd, 9.6, vex::voltageUnits::volt);
+        
+        // Poll proximity sensor (VEX Optical scales natively from 0 to 100)
+        while (!(blockColor() == currColor) && intakemotorrunning) {
+            wait(20, timeUnits::msec);
+        }
+        
+        // Stop outtake and monitor clearing speeds
+        outtake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+        
+        while (intake.velocity(velocityUnits::rpm) > 100 && intakemotorrunning) {
+            wait(20, timeUnits::msec);
+        }
+        
+        // Settle delay before wrapping the loop iteration
+        if (intakemotorrunning) {
+            intake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+            wait(300, timeUnits::msec);
+        }
+    }
+
+    // Explicit shutdown cleanup safely halting elements
+    intake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+    intakemotorrunning = false;
+
+    intake.setStopping(brakeType::hold);
+    outtake.setStopping(brakeType::hold);
+    return 1;
 }
 
 int autoIntake() {
@@ -629,81 +692,59 @@ int autoIntake() {
     // Explicit shutdown cleanup safely halting elements
     intake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
     intakemotorrunning = false;
+
+    intake.setStopping(brakeType::hold);
+    outtake.setStopping(brakeType::hold);
     return 1;
 }
+void autoOuttakeHigh(int time, int voltage = 12) {
 
-int autoOuttakeHigh(){
-    outtake_raiser.set(true);
-    outtakemotorrunning = true;
+    outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
+    intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
 
-    intake.setStopping(brakeType::coast);
-    outtake.setStopping(brakeType::coast);
+    vex::timer timer;
+    timer.clear();
 
-    intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-    outtake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-
-    wait(600, timeUnits::msec);
-
-    while(outtakemotorrunning){
-        while(abs(intake.velocity(velocityUnits::rpm))>5 && abs(outtake.velocity(velocityUnits::rpm))>5 && outtakemotorrunning){
-            wait(20, timeUnits::msec);
+    while(timer.time(timeUnits::msec) < time) {
+        if (currColor == 0 && blockColor() == 1) {
+            outtake.stop();
+            intake.stop();
+            forwardStraight(5.0);
+            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
+            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
+            while(!(blockColor() == currColor)){
+                wait(10, timeUnits::msec);
+            }
+            outtake.stop();
+            intake.stop();
+            forwardStraight(-7.0);
+            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
+            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
         }
-
-        if(outtakemotorrunning){
-            intake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-            outtake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-            wait(200, timeUnits::msec);
-            intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-            outtake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-            wait(400, timeUnits::msec);
+         else if (currColor == 1 && blockColor() == 0) { 
+            outtake.stop();
+            intake.stop();
+            forwardStraight(5.0);
+            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
+            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
+            while(!(blockColor() == currColor)){
+                wait(10, timeUnits::msec);
+            }
+            outtake.stop();
+            intake.stop();
+            forwardStraight(-7.0);
+            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
+            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
         }
+        wait(5, timeUnits::msec);
     }
-
-    intake.stop(brake);
-    outtake.stop(brake);
-    outtakemotorrunning = false;
-    return 1;
-}
-
-int autoOuttakeMidHigh(){
-    outtake_raiser.set(false);
-    outtakemotorrunning = true;
-
-    intake.setStopping(brakeType::coast);
-    outtake.setStopping(brakeType::coast);
-
-    intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-    outtake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-
-    wait(600, timeUnits::msec);
-
-    while(outtakemotorrunning){
-        while(abs(intake.velocity(velocityUnits::rpm))>5 && abs(outtake.velocity(velocityUnits::rpm))>5 && outtakemotorrunning){
-            wait(20, timeUnits::msec);
-        }
-
-        if(outtakemotorrunning){
-            intake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-            outtake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-            wait(200, timeUnits::msec);
-            intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-            outtake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-            wait(400, timeUnits::msec);
-        }
-    }
-
-    intake.stop(brake);
-    outtake.stop(brake);
-    outtakemotorrunning = false;
-    return 1;
+    intake.stop();
+    outtake.stop();
 }
 
 int autoOuttakeLow(){
     outtake_raiser.set(false);
     outtakemotorrunning = true;
-
-    intake.setStopping(brakeType::coast);
-    outtake.setStopping(brakeType::coast);
 
     intake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
     outtake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
@@ -798,16 +839,10 @@ void scoreIn(SCORING_LOCATIONS location, int time) {
             }
             turnToAbsolute(pos.heading);
             forwardStraight(-15.0); // Drive forward to score
-            outtakemotorrunning = true;
-            vex::task t1(autoOuttakeHigh);
-            wait(time, timeUnits::msec);
-            outtakemotorrunning = false;
+            autoOuttakeHigh(time);
         } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
             forwardStraight(-8.0); // Drive forward to score
-            outtakemotorrunning = true;
-            vex::task t1(autoOuttakeMidHigh);
-            wait(time, timeUnits::msec);
-            outtakemotorrunning = false;
+            autoOuttakeHigh(time);
         }
         else{
             forwardStraight(8.0); // Drive forward to score
@@ -830,7 +865,52 @@ bool intakeTarget (DETECTION_OBJECT target) {
     return pathFound;
 }
 
+void intakeLoader(){
+    // leftDriveSmart.setStopping(brakeType::coast);
+    // rightDriveSmart.setStopping(brakeType::coast);
+
+    vex::timer loaderTime; 
+    loaderTime.clear();
+    leftDriveSmart.spin(vex::directionType::fwd, 4, vex::voltageUnits::volt);
+    rightDriveSmart.spin(vex::directionType::fwd, 4, vex::voltageUnits::volt);
+
+    while (loaderTime.time(vex::timeUnits::msec) < 3000){
+        wait(10, timeUnits::msec);
+    }
+
+    leftDriveSmart.setStopping(brakeType::hold);
+    rightDriveSmart.setStopping(brakeType::hold);
+}
+
 void auton_isolation(){
+
+    DrivetrainInertial.setHeading(180, rotationUnits::deg);
+    leftDriveSmart.setStopping(brakeType::hold);
+    rightDriveSmart.setStopping(brakeType::hold);
+    intake.setStopping(brakeType::hold);
+    outtake.setStopping(brakeType::hold);
+
+    intakemotorrunning = true;
+    vex::task t1(autoIntake);
+    forwardStraight(23.0);
+    turnToAbsolute(270);
+    loader.set(true);
+    forwardStraight(10.0);
+
+    intakeLoader();
+
+    outtake_raiser.set(true);
+    forwardStraight(-28.0);
+
+    intakemotorrunning = false;
+
+    autoOuttakeHigh(15000, 8);
+
+
+
+    wait(5000, timeUnits::msec);
+
+
 
 }
 
@@ -877,7 +957,9 @@ void teleop(void) {
 
 
     if (Controller1.ButtonY.pressing()) { 
-        pathFindTo(-24.0, 24.0);
+        outtake_raiser.set(true);
+        forwardStraight(-5.0);
+        autoOuttakeHigh(10000, 8);
     }
     if (Controller1.ButtonA.pressing()) { 
         forwardStraight(-71.5);

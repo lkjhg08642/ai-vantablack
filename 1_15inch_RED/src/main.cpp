@@ -81,8 +81,9 @@ int main() {
   waitUntil(!(DrivetrainInertial.isCalibrating()));
   
   DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
-  
 
+  OpticalSensor.setLight(ledState::on);
+  OpticalSensor.setLightPower(100, percent);
 
   // start the status update display
   thread t1(dashboardTask);

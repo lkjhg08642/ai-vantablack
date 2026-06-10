@@ -29,6 +29,8 @@ const double GEAR_RATIO = 0.5;            // motor:wheel ratio
 const double TRACK_WIDTH = 12.0;          // inches between left/right wheels (ADJUST TO YOUR ROBOT)
 const double PI = 3.14159265358979323846;
 
+int currColor = 0; //0 blue, 1 red
+
 const int N = 47;
 int field[N][N] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1/**/,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -341,8 +343,8 @@ ScoringPos getScoringPos(SCORING_LOCATIONS location) {
 
 // Helper: wrap angle to [-180, 180]
 double wrapAngle(double angle) {
-    while (angle > 180.0)  angle -= 360.0;
-    while (angle < -180.0) angle += 360.0;
+    while (angle > 360.0)  angle -= 360.0;
+    while (angle < 0) angle += 360.0;
     return angle;
 }
 
@@ -445,7 +447,21 @@ void turnTo(double targetX, double targetY) {
     turnToAbsolute(targetHeading);
 }
 
-void forwardStraight(double fdistance) {
+void turnToReverse(double targetX, double targetY) {
+    // Compute desired absolute heading toward target point.
+    // Using atan2(dx, dy) because heading 0 = +Y axis, CW positive.
+    double dx = targetX - currX;
+    double dy = targetY - currY;
+
+    // If we're basically on the target, no meaningful heading exists.
+    if (std::sqrt(dx*dx + dy*dy) < 0.1) return;
+
+    double targetHeading = std::atan2(dx, dy) * 180.0 / PI;  // degrees, CW from +Y
+    
+    turnToAbsolute(wrapAngle(wrapAngle(targetHeading) + 180.0));  // face away from target
+}
+
+void forwardStraight(double fdistance, double maxRPM = 600.0) {
     double fbcoef = 51;  // convert inches to motor degrees
     double distanceEncoder = fbcoef * fdistance;
     double currentPos = 0;
@@ -454,7 +470,7 @@ void forwardStraight(double fdistance) {
     double thresholdBegin = 10 * fbcoef;
     double thresholdEnd   = 20 * fbcoef;
     double minSpeed = 130.0;
-    double maxSpeed = 600.0;
+    double maxSpeed = maxRPM;
     double currentAngle = DrivetrainInertial.heading(degrees);
     double angle = currentAngle;
 
@@ -587,23 +603,41 @@ void driveFor(double distance, double speedPercent) {
     rightDriveSmart.stop(brake);
 }
 
-void autoOuttakeHigh(int time) {
-    outtake.spin(directionType::fwd, 100, velocityUnits::pct);
-    intake.spin(vex::directionType::fwd, 100, percent);
-    wait(time, timeUnits::msec);
+int blockColor(){ // 0 blue, 1 red, 2 none
+    float hue; 
+    hue = OpticalSensor.hue();
+
+    if(hue < 20 && hue >0){return 1;}
+    if(hue < 220 && hue >200){return 0;}
+    return 2;
+}
+
+//0 blue, 1 red
+void autoOuttakeHigh(int time, int voltage = 12) {
+    outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
+    intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
+
+    vex::timer timer;
+    timer.clear();
+
+    while(timer.time(timeUnits::msec) < time) {
+        if (currColor == 0 && blockColor() == 1) {
+            outtake.stop();
+            intake.stop();
+            break;
+        }
+         else if (currColor == 1 && blockColor() == 0) { 
+            outtake.stop();
+            intake.stop();
+            break;
+        }
+        wait(5, timeUnits::msec);
+    }
     intake.stop();
     outtake.stop();
 }
 
-void autoOuttakeMidHigh(int time) {
-    outtake.spin(directionType::fwd, 100, velocityUnits::pct);
-    intake.spin(vex::directionType::fwd, 100, percent);
-    wait(time, timeUnits::msec);
-    intake.stop();
-    outtake.stop();
-}
-
-void autoOuttakeMidLow(int time) {
+void autoOuttakeLow(int time) {
     outtake.spin(directionType::rev, 100, velocityUnits::pct);
     intake.spin(vex::directionType::rev, 100, percent);
     wait(time, timeUnits::msec);
@@ -627,13 +661,13 @@ double distanceTo(double target_x, double target_y){
     return distance;
 }
 
-DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map){
+DETECTION_OBJECT findTarget(AI_RECORD local_map){
     DETECTION_OBJECT target;
     target.classID = -1;          // sentinel: -1 means "no target found"
     double lowestDist = 1e9;
 
     for (int i = 0; i < local_map.detectionCount; i++) {
-        if (local_map.detections[i].classID != (int) type) continue;
+        if (local_map.detections[i].classID != currColor) continue;
 
         double bx = local_map.detections[i].mapLocation.x / 0.0254;  // m -> in
         double by = local_map.detections[i].mapLocation.y / 0.0254;
@@ -641,7 +675,7 @@ DETECTION_OBJECT findTarget(OBJECT type, AI_RECORD local_map){
         // reject blocks inside a blocked area
         int row, col;
         GPStoGrid(bx, by, row, col);
-        if (field[row][col] == 1) continue;
+        // if (field[row][col] == 1) continue;
 
         double distance = distanceTo(bx, by);
         if (distance < lowestDist) {
@@ -681,7 +715,12 @@ void slideUpTo(double destinationAngle) {
     slideMotor2.stop();
 }
 
-void slideMoveToBottomPosition() {
+int slideUpToHigh() {
+    slideUpTo(350);
+    return 1;
+}
+
+int slideMoveToBottomPosition() {
     slideMotor1.spin(directionType::rev, 100, velocityUnits::pct);
     slideMotor2.spin(directionType::rev, 100, velocityUnits::pct);
 
@@ -693,6 +732,35 @@ void slideMoveToBottomPosition() {
     slideMotor2.stop();
     slideMotor1.setPosition(0, rotationUnits::deg);
     slideMotor2.setPosition(0, rotationUnits::deg);
+    return 1;
+}
+
+int autoIntakeColor() {
+    intake.setStopping(brakeType::brake);
+    outtake.setStopping(brakeType::hold);
+
+    intake.spin(directionType::fwd, 100, velocityUnits::pct);
+    outtake.spin(directionType::fwd, 70, velocityUnits::pct);
+
+    while (!(blockColor() == currColor) && intakemotorrunning) {
+        wait(5, timeUnits::msec);
+    }
+
+    outtake.stop();
+    // intake.spin(directionType::fwd, 100, velocityUnits::pct);
+    
+    // while (std::abs(intake.velocity(velocityUnits::rpm)) > 130 && intakemotorrunning) {
+    //     wait(20, timeUnits::msec);
+    // }
+    
+    while (intakemotorrunning) {
+        // intake.spin(directionType::fwd, 0, velocityUnits::pct);
+        wait(5, timeUnits::msec);
+    }    
+
+    intake.stop();
+    
+    return 1;
 }
 
 int autoIntake() {
@@ -708,7 +776,7 @@ int autoIntake() {
     }
 
     outtake.stop();
-    intake.spin(directionType::fwd, 100, velocityUnits::pct);
+    // intake.spin(directionType::fwd, 100, velocityUnits::pct);
     
     // while (std::abs(intake.velocity(velocityUnits::rpm)) > 130 && intakemotorrunning) {
     //     wait(20, timeUnits::msec);
@@ -796,12 +864,12 @@ void scoreIn(SCORING_LOCATIONS location, int time) {
         } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
             slideMoveToBottomPosition();
             forwardStraight(-8.0); // Drive forward to score
-            autoOuttakeMidHigh(time);
+            autoOuttakeHigh(time);
         }
         else{
             slideMoveToBottomPosition();
             forwardStraight(8.0); // Drive forward to score
-            autoOuttakeMidLow(time);
+            autoOuttakeLow(time);
         }
     }
 }
@@ -817,34 +885,80 @@ bool intakeTarget (DETECTION_OBJECT target) {
     return pathFound;
 }
 
+// void auton_isolation(){ // one block in high goal
+
+//     slideMotor1.setPosition(0, rotationUnits::deg);
+//     slideMotor2.setPosition(0, rotationUnits::deg);
+// //    int n = 0;
+//     // GPS.calibrate();
+//     // waitUntil(!(GPS.isCalibrating()));
+//     // DrivetrainInertial.setHeading(90, rotationUnits::deg);
+//     forwardStraight(18.0);     
+//     // driveFor(18.0, 1);
+//     turnToAbsolute(0);
+//     intakemotorrunning = true;
+//     vex::task t1(autoIntake);
+//     forwardStraight(19.0);
+//     // driveFor(20.0, 0.5);
+//     moveToPosition(-40, 24);
+//     intakemotorrunning = false;
+//     turnToAbsolute(0);
+//     leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+//     rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+//     while(FrontDis.objectDistance(mm) > 510) { 
+//         wait(20, timeUnits::msec);
+//     }
+//     leftDriveSmart.stop(brake);
+//     rightDriveSmart.stop(brake);
+//     turnToAbsolute(275);
+//     slideUpTo(350);
+//     forwardStraight(-16.0);
+//     autoOuttakeHigh(4000);
+// }
+
 void auton_isolation(){
     slideMotor1.setPosition(0, rotationUnits::deg);
     slideMotor2.setPosition(0, rotationUnits::deg);
-//    int n = 0;
-    // GPS.calibrate();
-    // waitUntil(!(GPS.isCalibrating()));
-    // DrivetrainInertial.setHeading(90, rotationUnits::deg);
-    forwardStraight(18.0);
-    // driveFor(18.0, 1);
-    turnToAbsolute(0);
+
+    forwardStraight(25.0);
+    turnToAbsolute(340);
+
     intakemotorrunning = true;
     vex::task t1(autoIntake);
-    forwardStraight(19.0);
-    // driveFor(20.0, 0.5);
-    moveToPosition(-40, 24);
+    forwardStraight(18.0, 400.0);
+
+    wait(500, timeUnits::msec);
+    turnToAbsolute(320);
+    forwardStraight(-20.0);
     intakemotorrunning = false;
-    turnToAbsolute(0);
-    leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-    while(FrontDis.objectDistance(mm) > 510) { 
-        wait(20, timeUnits::msec);
-    }
-    leftDriveSmart.stop(brake);
-    rightDriveSmart.stop(brake);
-    turnToAbsolute(275);
-    slideUpTo(350);
-    forwardStraight(-16.0);
-    autoOuttakeHigh(4000);
+
+    autoOuttakeHigh(1000, 8);
+
+    forwardStraight(5.0);
+    intakemotorrunning = true;
+    vex::task t2(autoIntakeColor);
+
+    forwardStraight(42.0);
+    forwardStraight(-7.0);  
+
+    // outtake.spin(directionType::fwd, 100, velocityUnits::pct);
+    // intake.spin(vex::directionType::fwd, 100, percent);
+    
+
+    wait(500, timeUnits::msec);
+    DETECTION_OBJECT target = findTarget(local_map);
+    turnTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254);
+    double distance = distanceTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254) - 2;
+    forwardStraight(distance, 350.0);
+    
+    wait(500, timeUnits::msec);
+    turnToReverse(-23.75, 46.5);
+    distance = distanceTo(-23.75, 46.5);
+    intakemotorrunning = false;
+    vex::task t3(slideUpToHigh);
+    forwardStraight(-distance - 2);
+
+    autoOuttakeHigh(2000, 8);
 }
 
 void auton_interaction(){
@@ -899,14 +1013,15 @@ void teleop(void) {
 
 
     if (Controller1.ButtonY.pressing()) {
+        turnToReverse(-23.75, 47.5);
         // turnToRelative(90);
         
-        pathFindTo(-40,24);
+        //pathFindTo(-40,24);
         //scoreIn(RED_HIGH_LEFT, 2000);
     }
 
     if (Controller1.ButtonA.pressing()) {
-        turnToRelative(-90);
+        auton_isolation();
     }
 
     if (Controller1.ButtonUp.pressing()) {

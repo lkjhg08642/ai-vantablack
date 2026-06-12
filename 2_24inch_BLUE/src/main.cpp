@@ -11,8 +11,6 @@
 
 using namespace vex;
 
-competition Competition;
-
 brain Brain;
 controller Controller1 = controller(primary);
 
@@ -43,7 +41,8 @@ controller Controller1 = controller(primary);
   motor_group rightDriveSmart = motor_group(rf, rm, rr);
   smartdrive Drivetrain = smartdrive(leftDriveSmart, rightDriveSmart, GPS, 219.44, 320, 40, mm, 1.3333333333333333);
 
-
+// A global instance of competition
+competition Competition;
 
 // create instance of jetson class to receive location and other
 // data from the Jetson nano
@@ -68,28 +67,47 @@ ai::jetson  jetson_comms;
 ai::robot_link       link(PORT1, "6599A_AI_robot", linkType::manager );
 // #endif
 
+void auto_Isolation(void) {
+	auton_isolation();
+}
+
+void auto_Interaction(void) {
+	auton_interaction();
+}
+
 bool firstAutoFlag = true;
 
 void autonomousMain(void) {
+  // ..........................................................................
+  // The first time we enter this function we will launch our Isolation routine
+  // When the field goes disabled after the isolation period this task will die
+  // When the field goes enabled for the second time this task will start again
+  // and we will enter the interaction period. 
+  // ..........................................................................
+
   if(firstAutoFlag)
-    auton_isolation();
+    auto_Isolation();
   else 
-    auton_interaction();
-  
+    auto_Interaction();
+
   firstAutoFlag = false;
 }
 
 int main() {
 
-  static AI_RECORD local_map; // local storage for latest data from the Jetson Nano
+  // static AI_RECORD local_map; // local storage for latest data from the Jetson Nano
   
   int32_t loop_time = 33; // Run at about 15Hz
+
+  leftDriveSmart.setStopping(brake);
+  rightDriveSmart.setStopping(brake);
 
   GPS.calibrate();
   waitUntil(!(GPS.isCalibrating()));
 
   DrivetrainInertial.calibrate();
   waitUntil(!(DrivetrainInertial.isCalibrating()));
+  wait(500, timeUnits::msec);
 
   DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
   odomraiser.set(false);
@@ -102,7 +120,7 @@ int main() {
 
   // Set up callbacks for autonomous and driver control periods.
   Competition.autonomous(autonomousMain);
-  Competition.drivercontrol(teleop);
+  // Competition.drivercontrol(teleop);
     // autonomousMain();
 
   // print through the controller to the terminal (vexos 1.0.12 is needed)
@@ -114,7 +132,7 @@ int main() {
   //FILE *fp = fopen("/dev/serial2","wb");
   // this_thread::sleep_for(loop_time);
 
-  // while(1) {
+  while(1) {
   //     // get last map data
   //     jetson_comms.get_data( &local_map );
 
@@ -128,6 +146,6 @@ int main() {
   //     jetson_comms.request_map();
 
   //     // Allow other tasks to run
-  //     this_thread::sleep_for(loop_time);
-  // }
+      this_thread::sleep_for(loop_time);
+  }
 }

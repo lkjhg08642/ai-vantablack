@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "3_24in_1minskill",
+    "project_name": "24in_SKILLS",
     "target": "v5",
     "templates": {
       "EZ-Template": {
@@ -424,7 +424,7 @@
       }
     },
     "upload_options": {
-      "description": "3_44",
+      "description": "24in_SKILLS",
       "slot": 3,
       "icon": "clawbot"
     },

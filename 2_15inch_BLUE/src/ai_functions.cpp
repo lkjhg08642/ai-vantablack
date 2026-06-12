@@ -349,6 +349,7 @@ double wrapAngle(double angle) {
 }
 
 void turnToAbsolute(double theta) {
+    
   // PID constants - tune these for your robot
   double kP = 0.4;    // small: less overshoot, more like a gentle spring; large: more aggressive correction but can overshoot and oscillate
   double kI = 0.05;   // small: integral builds slowly, good for correcting steady-state error without causing instability; large: integral builds quickly, can eliminate steady-state error faster but may cause overshoot and oscillation
@@ -645,6 +646,56 @@ void autoOuttakeLow(int time) {
     outtake.stop();
 }
 
+// void autoOuttakeLow(int time, int voltage = 12) {
+
+//     outtake.spin(directionType::rev, voltage, voltageUnits::volt);
+//     intake.spin(vex::directionType::rev, voltage, voltageUnits::volt);
+
+//     vex::timer timer;
+//     timer.clear();
+
+//     while(timer.time(timeUnits::msec) < time) {
+//         if (currColor == 0 && blockColor() == 1) { // blue
+//             outtake.stop();
+//             intake.stop();
+//             forwardStraight(-5.0);
+//             turnToRelative(45);
+//             outtake.spin(directionType::rev, voltage, voltageUnits::volt);
+//             intake.spin(vex::directionType::rev, voltage, voltageUnits::volt);
+//             while(!(blockColor() == currColor)){
+//                 wait(5, timeUnits::msec);
+//             }
+//             outtake.stop();
+//             intake.stop();
+//             turnToRelative(-45);
+//             forwardStraight(5.0);
+//             outtake.spin(directionType::rev, voltage, voltageUnits::volt);
+//             intake.spin(vex::directionType::rev, voltage, voltageUnits::volt);
+//         }
+//          else if (currColor == 1 && blockColor() == 0) { //red
+//             outtake.stop();
+//             intake.stop();
+//             forwardStraight(-5.0);
+//             turnToRelative(45);
+//             outtake.spin(directionType::rev, voltage, voltageUnits::volt);
+//             intake.spin(vex::directionType::rev, voltage, voltageUnits::volt);
+//             while(!(blockColor() == currColor)){
+//                 wait(5, timeUnits::msec);
+//             }
+//             outtake.stop();
+//             intake.stop();
+//             turnToRelative(-45);
+//             forwardStraight(5.0);
+//             outtake.spin(directionType::rev, voltage, voltageUnits::volt);
+//             intake.spin(vex::directionType::rev, voltage, voltageUnits::volt);
+//         }
+//         wait(5, timeUnits::msec);
+//     }
+//     intake.stop();
+//     outtake.stop();
+// }
+
+
 void moveToPosition(double targetX, double targetY){
     // First turn to face the target point
     turnTo(targetX, targetY);
@@ -666,15 +717,17 @@ DETECTION_OBJECT findTarget(AI_RECORD local_map){
     target.classID = -1;          // sentinel: -1 means "no target found"
     double lowestDist = 1e9;
 
+
     for (int i = 0; i < local_map.detectionCount; i++) {
+        
         if (local_map.detections[i].classID != currColor) continue;
 
-        double bx = local_map.detections[i].mapLocation.x / 0.0254;  // m -> in
+        double bx = local_map.detections[i].mapLocation.x / 0.0254;
         double by = local_map.detections[i].mapLocation.y / 0.0254;
 
         // reject blocks inside a blocked area
-        int row, col;
-        GPStoGrid(bx, by, row, col);
+        // int row, col;
+        // GPStoGrid(bx, by, row, col);
         // if (field[row][col] == 1) continue;
 
         double distance = distanceTo(bx, by);
@@ -683,40 +736,25 @@ DETECTION_OBJECT findTarget(AI_RECORD local_map){
             target = local_map.detections[i];
         }
     }
+
     return target;   // caller checks target.classID == -1 for "none"
 }
 
 void slideUpTo(double destinationAngle) {
-    // Read the current position from slideMotor2
-    double height = slideMotor2.position(rotationUnits::deg);
 
-    while (abs(height - destinationAngle) > 4.0) {
-        if (height < destinationAngle) {
-            // Spin both motors forward to lift the slide up
-            slideMotor1.spin(directionType::fwd, 100, velocityUnits::pct);
-            slideMotor2.spin(directionType::fwd, 100, velocityUnits::pct);
-        } 
-        else {
-            // Spin both motors in reverse to lower the slide down
-            slideMotor1.spin(directionType::rev, 100, velocityUnits::pct);
-            slideMotor2.spin(directionType::rev, 100, velocityUnits::pct);
-        }
+    slideMotor1.spin(directionType::fwd, 100, velocityUnits::pct);
+    slideMotor2.spin(directionType::fwd, 100, velocityUnits::pct);
 
-        // Update the height tracker from the encoder for the next loop check
-        height = slideMotor2.position(rotationUnits::deg);
-        
-        // VEX wait() defaults to seconds if units aren't specified. 
-        // 20 msec is the recommended minimum time step for sensor updates.
+    while ( slideMotor2.position(rotationUnits::deg) < destinationAngle) {
         wait(10, timeUnits::msec);
     }
 
-    // Stop both motors to lock the slide position once within the target threshold
     slideMotor1.stop();
     slideMotor2.stop();
 }
 
 int slideUpToHigh() {
-    slideUpTo(350);
+    slideUpTo(370);
     return 1;
 }
 
@@ -725,7 +763,7 @@ int slideMoveToBottomPosition() {
     slideMotor2.spin(directionType::rev, 100, velocityUnits::pct);
 
     while (!limitSwitch.pressing()) {
-        wait(10, timeUnits::msec);
+        wait(5, timeUnits::msec);
     }
 
     slideMotor1.stop();
@@ -858,7 +896,7 @@ void scoreIn(SCORING_LOCATIONS location, int time) {
                 rightDriveSmart.stop(brake);
             }
             turnToAbsolute(pos.heading);
-            slideUpTo(350); // Raise to high goal
+            slideUpToHigh(); // Raise to high goal
             forwardStraight(-15.0); // Drive forward to score
             autoOuttakeHigh(time);
         } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
@@ -885,38 +923,10 @@ bool intakeTarget (DETECTION_OBJECT target) {
     return pathFound;
 }
 
-// void auton_isolation(){ // one block in high goal
-
-//     slideMotor1.setPosition(0, rotationUnits::deg);
-//     slideMotor2.setPosition(0, rotationUnits::deg);
-// //    int n = 0;
-//     // GPS.calibrate();
-//     // waitUntil(!(GPS.isCalibrating()));
-//     // DrivetrainInertial.setHeading(90, rotationUnits::deg);
-//     forwardStraight(18.0);     
-//     // driveFor(18.0, 1);
-//     turnToAbsolute(0);
-//     intakemotorrunning = true;
-//     vex::task t1(autoIntake);
-//     forwardStraight(19.0);
-//     // driveFor(20.0, 0.5);
-//     moveToPosition(-40, 24);
-//     intakemotorrunning = false;
-//     turnToAbsolute(0);
-//     leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-//     rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-//     while(FrontDis.objectDistance(mm) > 510) { 
-//         wait(20, timeUnits::msec);
-//     }
-//     leftDriveSmart.stop(brake);
-//     rightDriveSmart.stop(brake);
-//     turnToAbsolute(275);
-//     slideUpTo(350);
-//     forwardStraight(-16.0);
-//     autoOuttakeHigh(4000);
-// }
-
 void auton_isolation(){
+
+    double distance;
+
     slideMotor1.setPosition(0, rotationUnits::deg);
     slideMotor2.setPosition(0, rotationUnits::deg);
 
@@ -939,17 +949,16 @@ void auton_isolation(){
     vex::task t2(autoIntakeColor);
 
     forwardStraight(42.0);
-    forwardStraight(-7.0);  
+    // forwardStraight(-7.0);  
 
     // outtake.spin(directionType::fwd, 100, velocityUnits::pct);
     // intake.spin(vex::directionType::fwd, 100, percent);
     
-
     wait(500, timeUnits::msec);
     DETECTION_OBJECT target = findTarget(local_map);
     turnTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254);
-    double distance = distanceTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254) - 2;
-    forwardStraight(distance, 350.0);
+    distance = distanceTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254) - 2;
+    forwardStraight(distance, 355.0);
     
     wait(500, timeUnits::msec);
     turnToReverse(-23.75, 46);
@@ -958,14 +967,124 @@ void auton_isolation(){
     vex::task t3(slideUpToHigh);
     forwardStraight(-distance);
 
-    autoOuttakeHigh(2000, 8);
+    autoOuttakeHigh(3000, 8);
 }
 
+// GPS COORDINATES WRONG!!!
 void auton_interaction(){
+    int timeToRest = 350;
+    double distance, angle, target_x, target_y;
+    DETECTION_OBJECT target;
+
+    forwardStraight(12);
+    vex::task t4(slideMoveToBottomPosition);
     
+    // //start looking
+
+    angle = 175;
+
+    
+    vex::timer location1timer;
+    location1timer.clear();
+
+    while (location1timer.time(vex::timeUnits::sec) < 30){
+
+        turnToAbsolute(angle);
+        
+        wait(timeToRest, timeUnits::msec);
+        target = findTarget(local_map);
+
+        target_x = target.mapLocation.x / 0.0254;
+        target_y = target.mapLocation.y / 0.0254;
+        distance = distanceTo(target_x, target_y) - 2;
+
+        if(target.classID != -1){
+
+            if( (target_x < -68 && target_y > 68) || (target_x < -70)){
+
+            }else{ // ok to intake
+                intakemotorrunning = true;
+                vex::task t5(autoIntakeColor);
+                
+                turnTo(target_x, target_y);
+                
+                forwardStraight(distance, 355.0);
+                //intake one more ball already
+
+                wait(timeToRest, timeUnits::msec);
+                turnToReverse(36, -48);
+                distance = distanceTo(36, -48);
+                forwardStraight(-distance);
+
+                wait(timeToRest, timeUnits::msec);
+                turnToReverse(23.75, -48);
+                distance = distanceTo(23.75, -48);
+                intakemotorrunning = false;
+                vex::task t6(slideUpToHigh);
+                forwardStraight(-distance);
+
+                autoOuttakeHigh(1500, 8);
+
+                forwardStraight(12);
+                vex::task t7(slideMoveToBottomPosition);
+            }
+
+        } 
+        
+        angle = angle - 30;
+        
+    }
+
+    pathFindTo(-13,-23);
+
+    angle = 295;
+
+    vex::timer location2timer;
+    location2timer.clear();
+
+    while (location2timer.time(vex::timeUnits::sec) < 40){
+
+        turnToAbsolute(angle);
+        
+        wait(timeToRest, timeUnits::msec);
+        target = findTarget(local_map);
+
+        target_x = target.mapLocation.x / 0.0254;
+        target_y = target.mapLocation.y / 0.0254;
+        distance = distanceTo(target_x, target_y) - 2;
+
+        if(target.classID != -1){
+
+            if(distance > 35){
+
+            }else{ // ok to intake
+                intakemotorrunning = true;
+                vex::task t5(autoIntakeColor);
+                
+                turnTo(target_x, target_y);
+                
+                forwardStraight(distance, 355.0);
+                //intake one more ball already
+
+                wait(timeToRest, timeUnits::msec);
+                turnTo(-17,-22.2);
+                distance = distanceTo(-17,-22.2);
+                forwardStraight(distance);
+
+                wait(timeToRest, timeUnits::msec);
+                turnTo(0,0);
+                intakemotorrunning = false;
+                forwardStraight(distanceTo(0,0) - 14);
+
+                autoOuttakeLow(2500);
+
+                forwardStraight(-10);
+            }
+
+        }
+        angle = angle - 25;
+    }
 }
-
-
 
 void teleop(void) {
 
@@ -1013,9 +1132,9 @@ void teleop(void) {
 
 
     if (Controller1.ButtonY.pressing()) {
-        turnToReverse(-23.75, 47.5);
+        // turnToReverse(-23.75, 47.5);
+        autoOuttakeLow(2500);
         // turnToRelative(90);
-        
         //pathFindTo(-40,24);
         //scoreIn(RED_HIGH_LEFT, 2000);
     }
@@ -1025,7 +1144,7 @@ void teleop(void) {
     }
 
     if (Controller1.ButtonUp.pressing()) {
-        slideUpTo(350);
+        slideUpToHigh();
     } 
     else if(Controller1.ButtonDown.pressing()) {
         slideMoveToBottomPosition();

@@ -22,7 +22,6 @@ using namespace vex;
 using namespace std;
 
 bool intakemotorrunning;
-bool outtakemotorrunning;
 
 // Robot constants
 const double WHEEL_DIAMETER = 4.0;        // inches
@@ -30,12 +29,7 @@ const double GEAR_RATIO = 0.5;            // motor:wheel ratio
 const double TRACK_WIDTH = 12.0;          // inches between left/right wheels (ADJUST TO YOUR ROBOT)
 const double PI = 3.14159265358979323846;
 
-bool outtake_raised = false;
-bool odom_raised = false;
-bool loader_dropped = false;
-bool descore_raised = false;
-
-int currColor = 0; //0 blue, 2 red
+int currColor = 0; //0 blue, 1 red
 
 const int N = 47;
 int field[N][N] = {
@@ -44,11 +38,11 @@ int field[N][N] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
@@ -56,31 +50,31 @@ int field[N][N] = {
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},/**/
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},/**/
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -95,24 +89,24 @@ double clearanceCost[N][N];
 const double CLEAR_RADIUS = 5.0;   // cells: how far the "stay away" influence reaches
 const double CLEAR_WEIGHT = 12.0;  // how strongly to avoid obstacles (raise = wider berth)
 
-// Compute, for each free cell, an approximate distance (in cells) to the
-// nearest obstacle, then turn that into a penalty. Call once at startup.
+// For each free cell, compute distance (in cells) to the nearest obstacle via
+// multi-source BFS, then turn that into a penalty. Call once at startup.
 void computeClearanceCost() {
-    // Step 1: brute-force nearest-obstacle distance via multi-source BFS.
-    // dist = 0 on obstacles, grows outward into free space.
     static double dist[N][N];
     std::queue<std::pair<int,int>> q;
 
+    // Seed the BFS: every obstacle is a source at distance 0.
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++) {
             if (field[r][c] == 1) { dist[r][c] = 0.0; q.push({r, c}); }
-            else                   dist[r][c] = 1e9;
+            else                    dist[r][c] = 1e9;
         }
 
+    // BFS outward into free space (4-connected).
     int dR[4] = {-1, 1, 0, 0};
     int dC[4] = {0, 0, -1, 1};
     while (!q.empty()) {
-        auto cur = q.front(); q.pop();
+        std::pair<int,int> cur = q.front(); q.pop();
         int r = cur.first, c = cur.second;
         for (int k = 0; k < 4; k++) {
             int nr = r + dR[k], nc = c + dC[k];
@@ -124,13 +118,12 @@ void computeClearanceCost() {
         }
     }
 
-    // Step 2: convert distance to a penalty. Cells within CLEAR_RADIUS of an
-    // obstacle pay extra; cells farther away pay nothing.
+    // Convert distance to penalty: cells within CLEAR_RADIUS of an obstacle
+    // pay extra; farther cells pay nothing. Obstacles themselves stay 0.
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++) {
             if (field[r][c] == 1) { clearanceCost[r][c] = 0.0; continue; }
-            double d = dist[r][c];
-            double pen = (CLEAR_RADIUS - d) * (CLEAR_WEIGHT / CLEAR_RADIUS);
+            double pen = (CLEAR_RADIUS - dist[r][c]) * (CLEAR_WEIGHT / CLEAR_RADIUS);
             clearanceCost[r][c] = (pen > 0.0) ? pen : 0.0;
         }
 }
@@ -193,6 +186,7 @@ bool nearestFreeCell(int r, int c, int &outR, int &outC) {
     return false;   // no free cell anywhere
 }
 
+// Fills pathR/pathC with the route, returns number of cells (0 if no path)
 int aStar(int sr, int sc, int gr, int gc, int pathR[], int pathC[]) {
     static double gScore[N][N];          // <-- double now
     static bool   closed[N][N];
@@ -335,7 +329,7 @@ int catmullRom(double wpX[], double wpY[], int n,
 
 ScoringPos getScoringPos(SCORING_LOCATIONS location) {
     switch (location) {
-        case RED_HIGH_LEFT:   return {-40,   47,    270};
+        case RED_HIGH_LEFT:   return {-40,   43,    270};
         case RED_HIGH_RIGHT:  return {-37,  -47,  270};
         case RED_MID_LEFT:    return {-16,   13.5,  311};
         case RED_MID_RIGHT:   return {-15.5, -18,    43};
@@ -356,9 +350,9 @@ double wrapAngle(double angle) {
 
 void turnToAbsolute(double theta) {
   // PID constants - tune these for your robot
-  double kP = 0.35;
-  double kI = 0.03;
-  double kD = 0.06;
+  double kP = 0.4;    // small: less overshoot, more like a gentle spring; large: more aggressive correction but can overshoot and oscillate
+  double kI = 0.05;   // small: integral builds slowly, good for correcting steady-state error without causing instability; large: integral builds quickly, can eliminate steady-state error faster but may cause overshoot and oscillation
+  double kD = 0.035;   // small: derivative is now scaled to deg/s and filtered
 
   double integral = 0;
   double prevError = 0;
@@ -368,27 +362,15 @@ void turnToAbsolute(double theta) {
   const double dt = 0.01;            // 10 ms, matches wait() below
 
   // Tolerance settings
-  double errorThreshold = 0.8;       // degrees
+  double errorThreshold = 0.8;      // degrees
   double velocityThreshold = 8.0;    // deg/s of actual rotation to consider stopped
   int settleCount = 0;
   int settleTarget = 10;             // loops within tolerance before exiting
 
   double integralLimit = 50.0;       // anti-windup cap
-  double minVolt = 2.5;              // static-friction floor
-
-  // ---- Timeout: give up after this long regardless of settling ----
-  double timeoutSec = 2.0;           // tune: enough for a full ~180 turn + settle
-  vex::timer turnTimer;
-  turnTimer.clear();
-  bool timedOut = false;
+  double minVolt = 2.5;              // static-friction floor (tune 1.0-2.0)
 
   while (true) {
-    // ---- timeout check ----
-    if (turnTimer.time(vex::timeUnits::sec) > timeoutSec) {
-      timedOut = true;
-      break;
-    }
-
     // Compute error as shortest angular distance to target [-180, 180]
     double current = DrivetrainInertial.heading(degrees);
     error = theta - current;
@@ -404,7 +386,7 @@ void turnToAbsolute(double theta) {
     if (integral > integralLimit) integral = integralLimit;
     if (integral < -integralLimit) integral = -integralLimit;
 
-    // Derivative, scaled to deg/s and low-pass filtered
+    // Derivative, scaled to deg/s and low-pass filtered to kill the end twitch
     double rawD = (error - prevError) / dt;
     derivativeFiltered = 0.7 * derivativeFiltered + 0.3 * rawD;
     double derivative = derivativeFiltered;
@@ -425,7 +407,7 @@ void turnToAbsolute(double theta) {
     leftDriveSmart.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
     rightDriveSmart.spin(vex::directionType::rev, output, vex::voltageUnits::volt);
 
-    // Settle check uses real rotational velocity (deg/s)
+    // Settle check now uses real rotational velocity (deg/s)
     if (fabs(error) < errorThreshold && fabs(derivative) < velocityThreshold) {
       settleCount++;
       if (settleCount >= settleTarget) break;
@@ -444,12 +426,6 @@ void turnToAbsolute(double theta) {
 
   leftDriveSmart.stop(brake);
   rightDriveSmart.stop(brake);
-
-  // Optional: surface a timeout so callers/you can see it on the brain
-  if (timedOut) {
-    Brain.Screen.clearLine();
-    Brain.Screen.print("turnToAbsolute timeout");
-  }
 }
 
 void turnToRelative(double theta) {
@@ -482,18 +458,18 @@ void turnToReverse(double targetX, double targetY) {
 
     double targetHeading = std::atan2(dx, dy) * 180.0 / PI;  // degrees, CW from +Y
     
-    turnToAbsolute(wrapAngle(wrapAngle(targetHeading) + 180.0));
+    turnToAbsolute(wrapAngle(wrapAngle(targetHeading) + 180.0));  // face away from target
 }
 
 void forwardStraight(double fdistance, double maxRPM = 600.0) {
-    double fbcoef = 56;  // convert inches to motor degrees
+    double fbcoef = 51;  // convert inches to motor degrees
     double distanceEncoder = fbcoef * fdistance;
     double currentPos = 0;
     double posDifference;
     double instantV = 0;
     double thresholdBegin = 10 * fbcoef;
-    double thresholdEnd   = 30 * fbcoef;
-    double minSpeed = 125.0;
+    double thresholdEnd   = 20 * fbcoef;
+    double minSpeed = 130.0;
     double maxSpeed = maxRPM;
     double currentAngle = DrivetrainInertial.heading(degrees);
     double angle = currentAngle;
@@ -505,7 +481,10 @@ void forwardStraight(double fdistance, double maxRPM = 600.0) {
 
     // VEX has no STOP_AND_RESET_ENCODER + RUN_TO_POSITION. Reset encoders
     // and drive by velocity, ending the loop when we reach the target count.
-    odom.resetPosition();
+    frontLeft.resetPosition();
+    backLeft.resetPosition();
+    frontRight.resetPosition();
+    backRight.resetPosition();
 
     // Direction of travel (sign of the requested distance).
     double dir = (distanceEncoder >= 0) ? 1.0 : -1.0;
@@ -517,7 +496,7 @@ void forwardStraight(double fdistance, double maxRPM = 600.0) {
 
         if (moveTimer.time(vex::timeUnits::sec) > timeoutSec) break;
 
-        currentPos   = odom.position(degrees);
+        currentPos   = backLeft.position(degrees);
         currentAngle = DrivetrainInertial.heading(degrees);
 
         // Trapezoidal speed profile: ramp up over the first half, down over
@@ -535,26 +514,135 @@ void forwardStraight(double fdistance, double maxRPM = 600.0) {
         // Heading correction. Velocities are in RPM here (VEX velocityUnits::rpm).
         if ((currentAngle - angle) > AngleTolerance) {
             // turn right a little bit
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
-            rightDriveSmart.spin(vex::directionType::fwd, dir * instantV*0.02,                 vex::voltageUnits::volt);
-            
+            backLeft.spin(vex::directionType::fwd,  dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
+            backRight.spin(vex::directionType::fwd, dir * instantV*0.02,                 vex::voltageUnits::volt);
+            frontLeft.spin(vex::directionType::fwd, dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
+            frontRight.spin(vex::directionType::fwd,dir * instantV*0.02,                 vex::voltageUnits::volt);
         } else if ((currentAngle - angle) < (-AngleTolerance)) {
             // turn left a little bit
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02,                 vex::voltageUnits::volt);
-            rightDriveSmart.spin(vex::directionType::fwd, dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
-            
+            backLeft.spin(vex::directionType::fwd,  dir * instantV * 0.02,                 vex::voltageUnits::volt);
+            backRight.spin(vex::directionType::fwd, dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
+            frontLeft.spin(vex::directionType::fwd, dir * instantV * 0.02,                 vex::voltageUnits::volt);
+            frontRight.spin(vex::directionType::fwd,dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
         } else {
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02, vex::voltageUnits::volt);
-            rightDriveSmart.spin(vex::directionType::fwd, dir * instantV * 0.02, vex::voltageUnits::volt);
-           
+            backLeft.spin(vex::directionType::fwd,  dir * instantV * 0.02, vex::voltageUnits::volt);
+            backRight.spin(vex::directionType::fwd, dir * instantV * 0.02, vex::voltageUnits::volt);
+            frontLeft.spin(vex::directionType::fwd, dir * instantV * 0.02, vex::voltageUnits::volt);
+            frontRight.spin(vex::directionType::fwd,dir * instantV * 0.02, vex::voltageUnits::volt);
         }
 
         wait(10, msec);  // loop pacing; the FTC version blocked on isBusy()
     }
 
     // No RUN_TO_POSITION to coast us to a stop — brake explicitly.
+    frontLeft.stop(brake);
+    backLeft.stop(brake);
+    frontRight.stop(brake);
+    backRight.stop(brake);
+}
+
+void driveFor(double distance, double speedPercent) {
+
+    // ===== Speed profile =====
+    const double MIN_SPEED = 10.0;            // % at start and end
+    const double ACCEL_FRACTION = 0.20;       // 0% -> 15% of distance: ramp up
+    const double DECEL_FRACTION = 0.30;       // 85% -> 100% of distance: ramp down
+
+    // ===== Distance-proportional max speed =====
+    // Scale linearly from MIN_SPEED (at 0 in) up to 100% (at FULL_SPEED_DIST in).
+    // Beyond FULL_SPEED_DIST, cap at 100%.
+    const double FULL_SPEED_DIST = 30.0;      // inches needed to earn full 100% speed
+    const double ABSOLUTE_MAX = 100.0;
+
+    double absDist = std::fabs(distance);
+    double MAX_SPEED = MIN_SPEED + (ABSOLUTE_MAX - MIN_SPEED) * (absDist / FULL_SPEED_DIST);
+    if (MAX_SPEED > ABSOLUTE_MAX) MAX_SPEED = ABSOLUTE_MAX;
+    if (MAX_SPEED < MIN_SPEED)    MAX_SPEED = MIN_SPEED;
+
+    // ===== Loop timing =====
+    const int dt = 10;  // ms
+
+    // ===== Distance setup =====
+    double wheelCircumference = PI * WHEEL_DIAMETER;
+    double wheelRevs = absDist / wheelCircumference;
+    double motorRevs = wheelRevs / GEAR_RATIO;
+    double targetDegrees = motorRevs * 360.0;
+
+    bool driveForward = (distance >= 0);
+    double startPos = frontLeft.position(degrees);
+    double startTime = Brain.Timer.time(msec);
+    int timeout = absDist * 60;
+
+    // ===== Drive loop =====
+    while (true) {
+        double traveled = std::fabs(frontLeft.position(degrees) - startPos);
+        if (traveled >= targetDegrees || Brain.Timer.time(msec) - startTime >= timeout) break;
+
+        double progress = traveled / targetDegrees;
+
+        // ===== Compute speed from trapezoidal profile =====
+        double speed;
+        if (progress < ACCEL_FRACTION) {
+            double t = progress / ACCEL_FRACTION;
+            speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * t * speedPercent;
+        } else if (progress > (1.0 - DECEL_FRACTION)) {
+            double t = (progress - (1.0 - DECEL_FRACTION)) / DECEL_FRACTION;
+            speed = MAX_SPEED - (MAX_SPEED - MIN_SPEED) * t * speedPercent;
+        } else {
+            speed = MAX_SPEED * speedPercent;
+        }
+
+        vex::directionType dir = driveForward ? vex::directionType::fwd : vex::directionType::rev;
+        leftDriveSmart.spin(dir, speed*0.12, vex::voltageUnits::volt);
+        rightDriveSmart.spin(dir, speed*0.12, vex::voltageUnits::volt);
+
+        task::sleep(dt);
+    }
+
     leftDriveSmart.stop(brake);
     rightDriveSmart.stop(brake);
+}
+
+int blockColor(){ // 0 blue, 1 red, 2 none
+    float hue; 
+    hue = OpticalSensor.hue();
+
+    if(hue < 20 && hue >0){return 1;}
+    if(hue < 220 && hue >200){return 0;}
+    return 2;
+}
+
+//0 blue, 1 red
+void autoOuttakeHigh(int time, int voltage = 12) {
+    outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
+    intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
+
+    vex::timer timer;
+    timer.clear();
+
+    while(timer.time(timeUnits::msec) < time) {
+        if (currColor == 0 && blockColor() == 1) {
+            outtake.stop();
+            intake.stop();
+            break;
+        }
+         else if (currColor == 1 && blockColor() == 0) { 
+            outtake.stop();
+            intake.stop();
+            break;
+        }
+        wait(5, timeUnits::msec);
+    }
+    intake.stop();
+    outtake.stop();
+}
+
+void autoOuttakeLow(int time) {
+    outtake.spin(directionType::rev, 100, velocityUnits::pct);
+    intake.spin(vex::directionType::rev, 100, percent);
+    wait(time, timeUnits::msec);
+    intake.stop();
+    outtake.stop();
 }
 
 void moveToPosition(double targetX, double targetY){
@@ -573,7 +661,6 @@ double distanceTo(double target_x, double target_y){
     return distance;
 }
 
-// Function to find the target object based on type and return its record
 DETECTION_OBJECT findTarget(AI_RECORD local_map){
     DETECTION_OBJECT target;
     target.classID = -1;          // sentinel: -1 means "no target found"
@@ -588,7 +675,7 @@ DETECTION_OBJECT findTarget(AI_RECORD local_map){
         // reject blocks inside a blocked area
         int row, col;
         GPStoGrid(bx, by, row, col);
-        if (field[row][col] == 1) continue;
+        // if (field[row][col] == 1) continue;
 
         double distance = distanceTo(bx, by);
         if (distance < lowestDist) {
@@ -599,190 +686,93 @@ DETECTION_OBJECT findTarget(AI_RECORD local_map){
     return target;   // caller checks target.classID == -1 for "none"
 }
 
-int blockColor(){ // 0 blue, 1 red, 2 none
-    float hue; 
-    hue = OpticalSensor.hue();
+void slideUpTo(double destinationAngle) {
 
-    if(hue < 20 && hue >0){return 1;}
-    if(hue < 220 && hue >200){return 0;}
-    return 2;
+    slideMotor1.spin(directionType::fwd, 100, velocityUnits::pct);
+    slideMotor2.spin(directionType::fwd, 100, velocityUnits::pct);
+
+    while ( slideMotor2.position(rotationUnits::deg) < destinationAngle) {
+        wait(10, timeUnits::msec);
+    }
+
+    slideMotor1.stop();
+    slideMotor2.stop();
+}
+
+int slideUpToHigh() {
+    slideUpTo(350);
+    return 1;
+}
+
+int slideMoveToBottomPosition() {
+    slideMotor1.spin(directionType::rev, 100, velocityUnits::pct);
+    slideMotor2.spin(directionType::rev, 100, velocityUnits::pct);
+
+    while (!limitSwitch.pressing()) {
+        wait(10, timeUnits::msec);
+    }
+
+    slideMotor1.stop();
+    slideMotor2.stop();
+    slideMotor1.setPosition(0, rotationUnits::deg);
+    slideMotor2.setPosition(0, rotationUnits::deg);
+    return 1;
 }
 
 int autoIntakeColor() {
-    
-    intakemotorrunning = true;
-    
-    // Configure standard motor brake modes
     intake.setStopping(brakeType::brake);
     outtake.setStopping(brakeType::hold);
 
-    while (intakemotorrunning) {
-        // Spin intake at full speed (100%) and hold the outtake still
-        intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-        outtake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-        
-        // Initial 1-second delay
-        wait(1000, timeUnits::msec);
-        
-        // Monitor intake motor speed drop-off (stalling/loading checks)
-        while (std::abs(intake.velocity(velocityUnits::rpm)) > 400 && intakemotorrunning) {
-            wait(20, timeUnits::msec);
-        }
-        
-        // Feed the outtake roller at 80% power
-        outtake.spin(vex::directionType::fwd, 9.6, vex::voltageUnits::volt);
-        
-        // Poll proximity sensor (VEX Optical scales natively from 0 to 100)
-        while (!(blockColor() == currColor) && intakemotorrunning) {
-            wait(20, timeUnits::msec);
-        }
-        
-        // Stop outtake and monitor clearing speeds
-        outtake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-        
-        while (intake.velocity(velocityUnits::rpm) > 100 && intakemotorrunning) {
-            wait(20, timeUnits::msec);
-        }
-        
-        // Settle delay before wrapping the loop iteration
-        if (intakemotorrunning) {
-            intake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-            wait(300, timeUnits::msec);
-        }
+    intake.spin(directionType::fwd, 100, velocityUnits::pct);
+    outtake.spin(directionType::fwd, 70, velocityUnits::pct);
+
+    while (!(blockColor() == currColor) && intakemotorrunning) {
+        wait(5, timeUnits::msec);
     }
 
-    // Explicit shutdown cleanup safely halting elements
-    intake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-    intakemotorrunning = false;
+    outtake.stop();
+    // intake.spin(directionType::fwd, 100, velocityUnits::pct);
+    
+    // while (std::abs(intake.velocity(velocityUnits::rpm)) > 130 && intakemotorrunning) {
+    //     wait(20, timeUnits::msec);
+    // }
+    
+    while (intakemotorrunning) {
+        // intake.spin(directionType::fwd, 0, velocityUnits::pct);
+        wait(5, timeUnits::msec);
+    }    
 
-    intake.setStopping(brakeType::hold);
-    outtake.setStopping(brakeType::hold);
+    intake.stop();
+    
     return 1;
 }
 
 int autoIntake() {
     
-    intakemotorrunning = true;
-    
-    // Configure standard motor brake modes
     intake.setStopping(brakeType::brake);
     outtake.setStopping(brakeType::hold);
 
-    while (intakemotorrunning) {
-        // Spin intake at full speed (100%) and hold the outtake still
-        intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-        outtake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-        
-        // Initial 1-second delay
-        wait(1000, timeUnits::msec);
-        
-        // Monitor intake motor speed drop-off (stalling/loading checks)
-        while (std::abs(intake.velocity(velocityUnits::rpm)) > 400 && intakemotorrunning) {
-            wait(20, timeUnits::msec);
-        }
-        
-        // Feed the outtake roller at 80% power
-        outtake.spin(vex::directionType::fwd, 9.6, vex::voltageUnits::volt);
-        
-        // Poll proximity sensor (VEX Optical scales natively from 0 to 100)
-        while (!OpticalSensor.isNearObject() && intakemotorrunning) {
-            wait(20, timeUnits::msec);
-        }
-        
-        // Stop outtake and monitor clearing speeds
-        outtake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-        
-        while (intake.velocity(velocityUnits::rpm) > 100 && intakemotorrunning) {
-            wait(20, timeUnits::msec);
-        }
-        
-        // Settle delay before wrapping the loop iteration
-        if (intakemotorrunning) {
-            intake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-            wait(300, timeUnits::msec);
-        }
+    intake.spin(directionType::fwd, 100, velocityUnits::pct);
+    outtake.spin(directionType::fwd, 100, velocityUnits::pct);
+
+    while (!OpticalSensor.isNearObject() && intakemotorrunning) {
+        wait(10, timeUnits::msec);
     }
 
-    // Explicit shutdown cleanup safely halting elements
-    intake.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-    intakemotorrunning = false;
-
-    intake.setStopping(brakeType::hold);
-    outtake.setStopping(brakeType::hold);
-    return 1;
-}
-void autoOuttakeHigh(int time, int voltage = 12) {
-
-    outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
-    intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
-
-    vex::timer timer;
-    timer.clear();
-
-    while(timer.time(timeUnits::msec) < time) {
-        if (currColor == 0 && blockColor() == 1) {
-            outtake.stop();
-            intake.stop();
-            forwardStraight(5.0);
-            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
-            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
-            while(!(blockColor() == currColor)){
-                wait(10, timeUnits::msec);
-            }
-            outtake.stop();
-            intake.stop();
-            forwardStraight(-7.0);
-            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
-            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
-        }
-         else if (currColor == 1 && blockColor() == 0) { 
-            outtake.stop();
-            intake.stop();
-            forwardStraight(5.0);
-            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
-            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
-            while(!(blockColor() == currColor)){
-                wait(10, timeUnits::msec);
-            }
-            outtake.stop();
-            intake.stop();
-            forwardStraight(-7.0);
-            outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
-            intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
-        }
-        wait(5, timeUnits::msec);
-    }
-    intake.stop();
     outtake.stop();
-}
+    // intake.spin(directionType::fwd, 100, velocityUnits::pct);
+    
+    // while (std::abs(intake.velocity(velocityUnits::rpm)) > 130 && intakemotorrunning) {
+    //     wait(20, timeUnits::msec);
+    // }
+    
+    while (intakemotorrunning) {
+        // intake.spin(directionType::fwd, 0, velocityUnits::pct);
+        wait(20, timeUnits::msec);
+    }    
 
-int autoOuttakeLow(){
-    outtake_raiser.set(false);
-    outtakemotorrunning = true;
-
-    intake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-    outtake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-
-    wait(600, timeUnits::msec);
-
-    while(outtakemotorrunning){
-        while(abs(intake.velocity(velocityUnits::rpm))>5 && abs(outtake.velocity(velocityUnits::rpm))>5 && outtakemotorrunning){
-            wait(20, timeUnits::msec);
-        }
-
-        if(outtakemotorrunning){
-            intake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-            outtake.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
-            wait(200, timeUnits::msec);
-            intake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-            outtake.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-            wait(400, timeUnits::msec);
-        }
-    }
-
-    intake.stop(brake);
-    outtake.stop(brake);
-    outtakemotorrunning = false;
+    intake.stop();
+    
     return 1;
 }
 
@@ -819,7 +809,6 @@ bool pathFindTo(double destX, double destY) {
         Controller1.Screen.setCursor(1,1);
         Controller1.Screen.print("(%.2f, %.2f)", curveX[i], curveY[i]);
         moveToPosition(curveX[i], curveY[i]);
-        wait(500, timeUnits::msec);
     }
     return true;
 }
@@ -853,18 +842,18 @@ void scoreIn(SCORING_LOCATIONS location, int time) {
                 rightDriveSmart.stop(brake);
             }
             turnToAbsolute(pos.heading);
+            slideUpTo(350); // Raise to high goal
             forwardStraight(-15.0); // Drive forward to score
             autoOuttakeHigh(time);
         } else if (location == RED_MID_LEFT || location == BLUE_MID_LEFT){
+            slideMoveToBottomPosition();
             forwardStraight(-8.0); // Drive forward to score
             autoOuttakeHigh(time);
         }
         else{
+            slideMoveToBottomPosition();
             forwardStraight(8.0); // Drive forward to score
-            outtakemotorrunning = true;
-            vex::task t1(autoOuttakeLow);
-            wait(time, timeUnits::msec);
-            outtakemotorrunning = false;
+            autoOuttakeLow(time);
         }
     }
 }
@@ -880,218 +869,102 @@ bool intakeTarget (DETECTION_OBJECT target) {
     return pathFound;
 }
 
-void intakeLoader(){
+// void auton_isolation(){ // one block in high goal
 
-    leftDriveSmart.setStopping(brakeType::hold);
-    rightDriveSmart.setStopping(brakeType::hold);
-
-    vex::timer loaderTime; 
-    loaderTime.clear();
-
-    leftDriveSmart.spin(vex::directionType::fwd, 4, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::fwd, 4, vex::voltageUnits::volt);
-
-    while (loaderTime.time(vex::timeUnits::msec) < 3000){
-        wait(10, timeUnits::msec);
-    }
-
-    leftDriveSmart.stop();
-    rightDriveSmart.stop();
-    
-}
+//     slideMotor1.setPosition(0, rotationUnits::deg);
+//     slideMotor2.setPosition(0, rotationUnits::deg);
+// //    int n = 0;
+//     // GPS.calibrate();
+//     // waitUntil(!(GPS.isCalibrating()));
+//     // DrivetrainInertial.setHeading(90, rotationUnits::deg);
+//     forwardStraight(18.0);     
+//     // driveFor(18.0, 1);
+//     turnToAbsolute(0);
+//     intakemotorrunning = true;
+//     vex::task t1(autoIntake);
+//     forwardStraight(19.0);
+//     // driveFor(20.0, 0.5);
+//     moveToPosition(-40, 24);
+//     intakemotorrunning = false;
+//     turnToAbsolute(0);
+//     leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+//     rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+//     while(FrontDis.objectDistance(mm) > 510) { 
+//         wait(20, timeUnits::msec);
+//     }
+//     leftDriveSmart.stop(brake);
+//     rightDriveSmart.stop(brake);
+//     turnToAbsolute(275);
+//     slideUpTo(350);
+//     forwardStraight(-16.0);
+//     autoOuttakeHigh(4000);
+// }
 
 void auton_isolation(){
+    slideMotor1.setPosition(0, rotationUnits::deg);
+    slideMotor2.setPosition(0, rotationUnits::deg);
 
-    DrivetrainInertial.setHeading(180, rotationUnits::deg);
-    leftDriveSmart.setStopping(brakeType::hold);
-    rightDriveSmart.setStopping(brakeType::hold);
-    intake.setStopping(brakeType::hold);
-    outtake.setStopping(brakeType::hold);
-
-    vex::timer autonTimer;
-    autonTimer.clear();
+    forwardStraight(25.0);
+    turnToAbsolute(340);
 
     intakemotorrunning = true;
     vex::task t1(autoIntake);
-    forwardStraight(23.5);
-    turnToAbsolute(270);
-    loader.set(true);
-    forwardStraight(10.0);
+    forwardStraight(18.0, 400.0);
 
-    intakeLoader();
-
-    outtake_raiser.set(true);
-    forwardStraight(-27);
-
+    wait(500, timeUnits::msec);
+    turnToAbsolute(320);
+    forwardStraight(-20.0);
     intakemotorrunning = false;
 
-    autoOuttakeHigh( (16 - autonTimer.time(vex::timeUnits::sec))*1000, 9);
+    autoOuttakeHigh(1000, 8);
 
+    forwardStraight(5.0);
+    intakemotorrunning = true;
+    vex::task t2(autoIntakeColor);
+
+    forwardStraight(42.0);
+    forwardStraight(-7.0);  
+
+    // outtake.spin(directionType::fwd, 100, velocityUnits::pct);
+    // intake.spin(vex::directionType::fwd, 100, percent);
+    
+
+    wait(500, timeUnits::msec);
+    DETECTION_OBJECT target = findTarget(local_map);
+    turnTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254);
+    double distance = distanceTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254) - 2;
+    forwardStraight(distance, 350.0);
+    
+    wait(500, timeUnits::msec);
+    turnToReverse(-23.75, 46);
+    distance = distanceTo(-23.75, 46);
+    intakemotorrunning = false;
+    vex::task t3(slideUpToHigh);
+    forwardStraight(-distance);
+
+    autoOuttakeHigh(2000, 8);
 }
 
-//GPS COORDINATES WRONG!!!
 void auton_interaction(){
-
-    int timeToRest = 500;
-    double distance, angle, target_x, target_y;
-    DETECTION_OBJECT target;
-
-    // DrivetrainInertial.setHeading(270, rotationUnits::deg);
-
-    forwardStraight(12);
-    // outtake_raiser.set(false);
     
-    // start looking
-
-    angle = 175;
-    
-    vex::timer location1timer;
-    location1timer.clear();
-
-    while (location1timer.time(vex::timeUnits::sec) < 30){
-
-        turnToAbsolute(angle);
-        
-        wait(timeToRest, timeUnits::msec);
-        target = findTarget(local_map);
-
-        target_x = target.mapLocation.x / 0.0254;
-        target_y = target.mapLocation.y / 0.0254;
-        distance = distanceTo(target_x, target_y) - 2;
-
-        if(target.classID != -1){
-
-            if( (target_x < -68 && target_y > 68) || (target_x < -70)){
-
-            }else{ // ok to intake
-                intakemotorrunning = true;
-                vex::task t5(autoIntakeColor);
-                
-                turnTo(target_x, target_y);
-                turnToRelative(2);
-                
-                forwardStraight(distance, 355.0);
-                //intake one more ball already
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(36, 46);
-                distance = distanceTo(36, 46);
-                forwardStraight(-distance);
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(23.75, 47.5);
-                distance = distanceTo(23.75, 46);
-                intakemotorrunning = false;
-                forwardStraight(-distance);
-
-                autoOuttakeHigh(1500, 8);
-
-                forwardStraight(12);
-            }
-
-        } 
-        
-        angle = angle + 30;
-        
-    }
-
-    pathFindTo(-23,20);
-
-    angle = 270;
-
-    vex::timer location2timer;
-    location2timer.clear();
-
-    while (location2timer.time(vex::timeUnits::sec) < 30){
-
-        turnToAbsolute(angle);
-        
-        wait(timeToRest, timeUnits::msec);
-        target = findTarget(local_map);
-
-        target_x = target.mapLocation.x / 0.0254;
-        target_y = target.mapLocation.y / 0.0254;
-        distance = distanceTo(target_x, target_y) - 2;
-
-        if(target.classID != -1){
-
-            if(distance > 35){
-
-            }else{ // ok to intake
-                intakemotorrunning = true;
-                vex::task t5(autoIntakeColor);
-                
-                turnTo(target_x, target_y);
-                
-                forwardStraight(distance, 355.0);
-                //intake one more ball already
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(-23,20);
-                distance = distanceTo(-23,20);
-                forwardStraight(-distance);
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(0,0);
-                intakemotorrunning = false;
-                outtake_raiser.set(false);
-                forwardStraight(-distanceTo(0,0) + 14);
-
-                autoOuttakeHigh(2000, 9);
-
-                forwardStraight(10);
-            }
-
-        }
-        angle = angle + 25;
-    }
-
-    pathFindTo(34, 27);
-    
-
-    turnToAbsolute(90);
-    
-
-    leftDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
-
-    wait(2000, timeUnits::msec);
-
-    leftDriveSmart.stop(brake);
-    rightDriveSmart.stop(brake);
-
-    forwardStraight(30);
-
-    turnToAbsolute(0);
-
-    leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-
-    while(currY < -5){
-        wait(5, timeUnits::msec);
-    }
-    
-    leftDriveSmart.stop(brake);
-    rightDriveSmart.stop(brake);
-
-    turnToAbsolute(90);
-
-    odomraiser.set(true);
-    wait(300, timeUnits::msec);
-
-    leftDriveSmart.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-    wait(5000, timeUnits::msec);
 }
+
+
 
 void teleop(void) {
 
+// Set slide motors to "hold"
+    slideMotor1.setStopping(brakeType::brake);
+    slideMotor2.setStopping(brakeType::brake);
+
+    slideMotor1.setPosition(0, rotationUnits::deg);
+    slideMotor2.setPosition(0, rotationUnits::deg);
     //link.setOffset()
 
     // int x = 1;
     // int y = 1;
     Controller1.Screen.clearScreen();
-   while (1) {
+  while (1) {
     // This is the main execution loop for the user control program.
     // Each time through the loop your program should update motor + servo
     // values based on feedback from the joysticks.
@@ -1107,104 +980,77 @@ void teleop(void) {
     // Axis 1: Right Joystick X-Axis (Rotate Left/Right)
 	
     int forwardValue = Controller1.Axis3.position();
+    int strafeValue  = Controller1.Axis4.position();
     int turnValue    = Controller1.Axis1.position();
 
-    // Standard Arcade Drive mixing math
-    int leftSpeed  = forwardValue + turnValue;
-    int rightSpeed = forwardValue - turnValue;
+    // Mecanum Kinematics Math
+    int flSpeed = forwardValue + strafeValue + turnValue;
+    int blSpeed = forwardValue - strafeValue + turnValue;
+    int frSpeed = forwardValue - strafeValue - turnValue;
+    int brSpeed = forwardValue + strafeValue - turnValue;
 
-    // Apply calculated speeds directly to the motor groups.
-    // The individual motor direction rules (true/false) you specified during 
-    // initialization will automatically handle the reversing internally.
-    leftDriveSmart.spin(vex::directionType::fwd, leftSpeed, percent);
-    rightDriveSmart.spin(vex::directionType::fwd, rightSpeed, percent);
+    // Apply calculated speeds to the motors
+    frontLeft.spin(vex::directionType::fwd, flSpeed, percent);
+    backLeft.spin(vex::directionType::fwd, blSpeed, percent);
+    frontRight.spin(vex::directionType::fwd, frSpeed, percent);
+    backRight.spin(vex::directionType::fwd, brSpeed, percent);
 
 
-    if (Controller1.ButtonB.pressing()) { 
-        auton_isolation();
-        // forwardStraight(24);
-    }
-    // if (Controller1.ButtonB.pressing()) { 
-    //     DETECTION_OBJECT target = findTarget(local_map);
-    //     if (target.classID != -1){
-    //         turnTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254);
-    //         forwardStraight(distanceTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254), 300.0);
-    //     }
+    // if (Controller1.ButtonY.pressing()) {
+    //     turnToReverse(-23.75, 47.5);
+    //     // turnToRelative(90);
+        
+    //     //pathFindTo(-40,24);
+    //     //scoreIn(RED_HIGH_LEFT, 2000);
     // }
 
-    if (Controller1.ButtonX.pressing()) { 
+    // if (Controller1.ButtonA.pressing()) {
+    //     auton_isolation();
+    // }
+
+    if (Controller1.ButtonUp.pressing()) {
+        slideUpTo(370);
+    } 
+    else if(Controller1.ButtonDown.pressing()) {
+        slideMoveToBottomPosition();
+    } 
+
+    if (Controller1.ButtonR1.pressing()) {
+        if (intakemotorrunning) {
+            intakemotorrunning = false;
+            intake.stop();
+            outtake.stop();
+        } else {
+            intakemotorrunning = true;
+            intake.spin(vex::directionType::fwd, 100, percent);
+            outtake.spin(vex::directionType::fwd, 100, percent);
+        }
+        wait(200, timeUnits::msec);
+        
+    } 
+    else if (Controller1.ButtonR2.pressing()) {
+        if (intakemotorrunning) {
+            intakemotorrunning = false;
+            intake.stop();
+            outtake.stop();
+        } else {
+            intakemotorrunning = true;
+            intake.spin(vex::directionType::rev, 100, percent);
+            outtake.spin(vex::directionType::rev, 100, percent);
+        }
+        wait(200, timeUnits::msec);
+    } 
+    else if (Controller1.ButtonX.pressing()) {
         if (intakemotorrunning) {
             intakemotorrunning = false;
         } else {
             intakemotorrunning = true;
-            vex::task t1(autoIntake); 
+            vex::task t1(autoIntake);
         }
-        wait(250, msec); // Debounce delay
+        wait(200, timeUnits::msec);
     }
 
-    if (Controller1.ButtonR1.pressing()) {
-        intake.spin(vex::directionType::fwd, 100, percent);
-        outtake.spin(vex::directionType::fwd, 100, percent);
-        intakemotorrunning = false; 
-    }
-    else if (Controller1.ButtonR2.pressing()) {
-        intake.spin(vex::directionType::rev, 100, percent);
-        outtake.spin(vex::directionType::rev, 100, percent);
-        intakemotorrunning = false;
-    }
-    else {
-        // If no manual buttons are held and the macro task is inactive, completely stall rollers
-        if (!intakemotorrunning) {
-            intake.spin(vex::directionType::fwd, 0, percent);
-            outtake.spin(vex::directionType::fwd, 0, percent);
-        }    
-    }
-
-    if (Controller1.ButtonY.pressing()) {
-        if (outtake_raised) {
-            outtake_raiser.set(false);
-            outtake_raised = false;
-        } else {
-            outtake_raiser.set(true);
-            outtake_raised = true;
-        }
-        wait(250, msec); // Debounce delay
-    }
-
-    if (Controller1.ButtonA.pressing()) {
-        if (loader_dropped) {
-            loader.set(false);
-            loader_dropped = false;
-        } else {
-            loader.set(true);
-            loader_dropped = true;
-        }
-        wait(250, msec); // Debounce delay
-    }
-
-    if (Controller1.ButtonLeft.pressing()) {
-        if (descore_raised) {
-            descore.set(false);
-            descore_raised = false;
-        } else {
-            descore.set(true);
-            descore_raised = true;
-        }
-        wait(250, msec); // Debounce delay
-    }
-
-    if (Controller1.ButtonRight.pressing()) {
-        if (odom_raised) {
-            odomraiser.set(false);
-            odom_raised = false;
-        } else {
-            odomraiser.set(true);
-            odom_raised = true;
-        }
-        wait(250, msec); // Debounce delay
-    }
-
-    task::sleep(10);
+    task::sleep(20);
 
   }
 }

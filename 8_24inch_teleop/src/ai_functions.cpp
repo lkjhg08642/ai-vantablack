@@ -35,7 +35,7 @@ bool odom_raised = false;
 bool loader_dropped = false;
 bool descore_raised = false;
 
-int currColor = 0; //0 blue, 2 red
+int currColor = 0; //0 blue, 1 red
 
 const int N = 47;
 int field[N][N] = {
@@ -44,43 +44,43 @@ int field[N][N] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},/**/
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},/**/
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
-    {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
+    {1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -349,16 +349,16 @@ ScoringPos getScoringPos(SCORING_LOCATIONS location) {
 
 // Helper: wrap angle to [-180, 180]
 double wrapAngle(double angle) {
-    while (angle > 360.0)  angle -= 360.0;
-    while (angle < 0) angle += 360.0;
+    while (angle > 180.0)  angle -= 360.0;
+    while (angle < -180.0) angle += 360.0;
     return angle;
 }
 
 void turnToAbsolute(double theta) {
   // PID constants - tune these for your robot
-  double kP = 0.35;
-  double kI = 0.03;
-  double kD = 0.06;
+  double kP = 0.38;
+  double kI = 0.06;
+  double kD = 0.03;
 
   double integral = 0;
   double prevError = 0;
@@ -471,20 +471,6 @@ void turnTo(double targetX, double targetY) {
     turnToAbsolute(targetHeading);
 }
 
-void turnToReverse(double targetX, double targetY) {
-    // Compute desired absolute heading toward target point.
-    // Using atan2(dx, dy) because heading 0 = +Y axis, CW positive.
-    double dx = targetX - currX;
-    double dy = targetY - currY;
-
-    // If we're basically on the target, no meaningful heading exists.
-    if (std::sqrt(dx*dx + dy*dy) < 0.1) return;
-
-    double targetHeading = std::atan2(dx, dy) * 180.0 / PI;  // degrees, CW from +Y
-    
-    turnToAbsolute(wrapAngle(wrapAngle(targetHeading) + 180.0));
-}
-
 void forwardStraight(double fdistance, double maxRPM = 600.0) {
     double fbcoef = 56;  // convert inches to motor degrees
     double distanceEncoder = fbcoef * fdistance;
@@ -535,17 +521,17 @@ void forwardStraight(double fdistance, double maxRPM = 600.0) {
         // Heading correction. Velocities are in RPM here (VEX velocityUnits::rpm).
         if ((currentAngle - angle) > AngleTolerance) {
             // turn right a little bit
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
             rightDriveSmart.spin(vex::directionType::fwd, dir * instantV*0.02,                 vex::voltageUnits::volt);
+            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
             
         } else if ((currentAngle - angle) < (-AngleTolerance)) {
             // turn left a little bit
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02,                 vex::voltageUnits::volt);
             rightDriveSmart.spin(vex::directionType::fwd, dir * instantV * percentChange*0.02, vex::voltageUnits::volt);
+            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02,                 vex::voltageUnits::volt);
             
         } else {
-            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02, vex::voltageUnits::volt);
             rightDriveSmart.spin(vex::directionType::fwd, dir * instantV * 0.02, vex::voltageUnits::volt);
+            leftDriveSmart.spin(vex::directionType::fwd,  dir * instantV * 0.02, vex::voltageUnits::volt);
            
         }
 
@@ -819,7 +805,6 @@ bool pathFindTo(double destX, double destY) {
         Controller1.Screen.setCursor(1,1);
         Controller1.Screen.print("(%.2f, %.2f)", curveX[i], curveY[i]);
         moveToPosition(curveX[i], curveY[i]);
-        wait(500, timeUnits::msec);
     }
     return true;
 }
@@ -881,13 +866,11 @@ bool intakeTarget (DETECTION_OBJECT target) {
 }
 
 void intakeLoader(){
-
-    leftDriveSmart.setStopping(brakeType::hold);
-    rightDriveSmart.setStopping(brakeType::hold);
+    // leftDriveSmart.setStopping(brakeType::coast);
+    // rightDriveSmart.setStopping(brakeType::coast);
 
     vex::timer loaderTime; 
     loaderTime.clear();
-
     leftDriveSmart.spin(vex::directionType::fwd, 4, vex::voltageUnits::volt);
     rightDriveSmart.spin(vex::directionType::fwd, 4, vex::voltageUnits::volt);
 
@@ -895,9 +878,8 @@ void intakeLoader(){
         wait(10, timeUnits::msec);
     }
 
-    leftDriveSmart.stop();
-    rightDriveSmart.stop();
-    
+    leftDriveSmart.setStopping(brakeType::hold);
+    rightDriveSmart.setStopping(brakeType::hold);
 }
 
 void auton_isolation(){
@@ -908,12 +890,9 @@ void auton_isolation(){
     intake.setStopping(brakeType::hold);
     outtake.setStopping(brakeType::hold);
 
-    vex::timer autonTimer;
-    autonTimer.clear();
-
     intakemotorrunning = true;
     vex::task t1(autoIntake);
-    forwardStraight(23.5);
+    forwardStraight(23.0);
     turnToAbsolute(270);
     loader.set(true);
     forwardStraight(10.0);
@@ -921,168 +900,25 @@ void auton_isolation(){
     intakeLoader();
 
     outtake_raiser.set(true);
-    forwardStraight(-27);
+    forwardStraight(-28.0);
 
     intakemotorrunning = false;
 
-    autoOuttakeHigh( (16 - autonTimer.time(vex::timeUnits::sec))*1000, 9);
+    autoOuttakeHigh(15000, 8);
 
-}
 
-//GPS COORDINATES WRONG!!!
-void auton_interaction(){
 
-    int timeToRest = 500;
-    double distance, angle, target_x, target_y;
-    DETECTION_OBJECT target;
-
-    // DrivetrainInertial.setHeading(270, rotationUnits::deg);
-
-    forwardStraight(12);
-    // outtake_raiser.set(false);
-    
-    // start looking
-
-    angle = 175;
-    
-    vex::timer location1timer;
-    location1timer.clear();
-
-    while (location1timer.time(vex::timeUnits::sec) < 30){
-
-        turnToAbsolute(angle);
-        
-        wait(timeToRest, timeUnits::msec);
-        target = findTarget(local_map);
-
-        target_x = target.mapLocation.x / 0.0254;
-        target_y = target.mapLocation.y / 0.0254;
-        distance = distanceTo(target_x, target_y) - 2;
-
-        if(target.classID != -1){
-
-            if( (target_x < -68 && target_y > 68) || (target_x < -70)){
-
-            }else{ // ok to intake
-                intakemotorrunning = true;
-                vex::task t5(autoIntakeColor);
-                
-                turnTo(target_x, target_y);
-                turnToRelative(2);
-                
-                forwardStraight(distance, 355.0);
-                //intake one more ball already
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(36, 46);
-                distance = distanceTo(36, 46);
-                forwardStraight(-distance);
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(23.75, 47.5);
-                distance = distanceTo(23.75, 46);
-                intakemotorrunning = false;
-                forwardStraight(-distance);
-
-                autoOuttakeHigh(1500, 8);
-
-                forwardStraight(12);
-            }
-
-        } 
-        
-        angle = angle + 30;
-        
-    }
-
-    pathFindTo(-23,20);
-
-    angle = 270;
-
-    vex::timer location2timer;
-    location2timer.clear();
-
-    while (location2timer.time(vex::timeUnits::sec) < 30){
-
-        turnToAbsolute(angle);
-        
-        wait(timeToRest, timeUnits::msec);
-        target = findTarget(local_map);
-
-        target_x = target.mapLocation.x / 0.0254;
-        target_y = target.mapLocation.y / 0.0254;
-        distance = distanceTo(target_x, target_y) - 2;
-
-        if(target.classID != -1){
-
-            if(distance > 35){
-
-            }else{ // ok to intake
-                intakemotorrunning = true;
-                vex::task t5(autoIntakeColor);
-                
-                turnTo(target_x, target_y);
-                
-                forwardStraight(distance, 355.0);
-                //intake one more ball already
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(-23,20);
-                distance = distanceTo(-23,20);
-                forwardStraight(-distance);
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(0,0);
-                intakemotorrunning = false;
-                outtake_raiser.set(false);
-                forwardStraight(-distanceTo(0,0) + 14);
-
-                autoOuttakeHigh(2000, 9);
-
-                forwardStraight(10);
-            }
-
-        }
-        angle = angle + 25;
-    }
-
-    pathFindTo(34, 27);
-    
-
-    turnToAbsolute(90);
-    
-
-    leftDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
-
-    wait(2000, timeUnits::msec);
-
-    leftDriveSmart.stop(brake);
-    rightDriveSmart.stop(brake);
-
-    forwardStraight(30);
-
-    turnToAbsolute(0);
-
-    leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-
-    while(currY < -5){
-        wait(5, timeUnits::msec);
-    }
-    
-    leftDriveSmart.stop(brake);
-    rightDriveSmart.stop(brake);
-
-    turnToAbsolute(90);
-
-    odomraiser.set(true);
-    wait(300, timeUnits::msec);
-
-    leftDriveSmart.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::rev, 12, vex::voltageUnits::volt);
     wait(5000, timeUnits::msec);
+
+
+
 }
+
+void auton_interaction(){
+    
+}
+
+
 
 void teleop(void) {
 
@@ -1120,17 +956,15 @@ void teleop(void) {
     rightDriveSmart.spin(vex::directionType::fwd, rightSpeed, percent);
 
 
-    if (Controller1.ButtonB.pressing()) { 
-        auton_isolation();
-        // forwardStraight(24);
-    }
-    // if (Controller1.ButtonB.pressing()) { 
-    //     DETECTION_OBJECT target = findTarget(local_map);
-    //     if (target.classID != -1){
-    //         turnTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254);
-    //         forwardStraight(distanceTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254), 300.0);
-    //     }
-    // }
+    //if (Controller1.ButtonY.pressing()) { 
+    //    outtake_raiser.set(true);
+    //    forwardStraight(-5.0);
+    //    autoOuttakeHigh(10000, 8);
+    //}
+	
+    //if (Controller1.ButtonA.pressing()) { 
+    //    forwardStraight(-71.5);
+    //}
 
     if (Controller1.ButtonX.pressing()) { 
         if (intakemotorrunning) {

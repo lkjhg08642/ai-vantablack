@@ -11,38 +11,28 @@
 
 using namespace vex;
 
+competition Competition;
+
 brain Brain;
 controller Controller1 = controller(primary);
 
-  motor lf  = motor(PORT15, ratio6_1, false);
-  motor lm = motor(PORT4, ratio6_1, true);
-  motor lr  = motor(PORT5, ratio6_1, true);
+motor frontLeft = motor(PORT12, ratio6_1, true);
+motor backLeft = motor(PORT11, ratio6_1, true);
+motor frontRight = motor(PORT18, ratio6_1, false); 
+motor backRight = motor(PORT20, ratio6_1, false);
+inertial DrivetrainInertial = inertial(PORT2);
+gps GPS = gps(PORT8, 121.6, -40, distanceUnits::mm, 90);
+motor intake = motor(PORT3, ratio6_1, true);
+motor outtake = motor(PORT4, ratio6_1, false);
+motor slideMotor1 = motor(PORT17, ratio18_1, false);
+motor slideMotor2 = motor(PORT16, ratio18_1, true);
+limit limitSwitch = limit(Brain.ThreeWirePort.H);
+optical OpticalSensor = optical(PORT5);
+distance FrontDis = distance(PORT15);
 
-  motor rf = motor(PORT8, ratio6_1, true);
-  motor rm = motor(PORT7, ratio6_1, false);
-  motor rr = motor(PORT10, ratio6_1, false);
-
-  rotation odom = rotation(PORT6, false);
-
-  motor intake = motor(PORT9, ratio6_1, false);
-  motor outtake = motor(PORT14, ratio6_1, true);
-  digital_out outtake_raiser = digital_out(Brain.ThreeWirePort.A);
-  digital_out descore = digital_out(Brain.ThreeWirePort.B);
-  digital_out loader = digital_out(Brain.ThreeWirePort.H);
-  digital_out odomraiser = digital_out(Brain.ThreeWirePort.G);
-  optical OpticalSensor = optical(PORT19);
-  distance FrontDis = distance(PORT18);
-
-  inertial DrivetrainInertial = inertial(PORT3);
-
-  gps GPS = gps(PORT11, -152.40, 0.00, mm, 270);
-
-  motor_group leftDriveSmart = motor_group(lf, lm, lr);
-  motor_group rightDriveSmart = motor_group(rf, rm, rr);
-  smartdrive Drivetrain = smartdrive(leftDriveSmart, rightDriveSmart, GPS, 219.44, 320, 40, mm, 1.3333333333333333);
-
-// A global instance of competition
-competition Competition;
+motor_group leftDriveSmart = motor_group(frontLeft, backLeft);
+motor_group rightDriveSmart = motor_group(frontRight, backRight);
+smartdrive Drivetrain = smartdrive(leftDriveSmart, rightDriveSmart, GPS, 219.44, 320, 40, mm, 1.3333333333333333);
 
 // create instance of jetson class to receive location and other
 // data from the Jetson nano
@@ -64,63 +54,43 @@ ai::jetson  jetson_comms;
 // ai::robot_link       link(PORT7, "6599A_AI_robot", linkType::manager );
 // #else
 // #pragma message("building for the worker")
-ai::robot_link       link(PORT1, "6599A_AI_robot", linkType::manager );
+ai::robot_link       link(PORT7, "6599A_AI_robot", linkType::worker );
 // #endif
-
-void auto_Isolation(void) {
-	auton_isolation();
-}
-
-void auto_Interaction(void) {
-	auton_interaction();
-}
 
 bool firstAutoFlag = true;
 
 void autonomousMain(void) {
-  // ..........................................................................
-  // The first time we enter this function we will launch our Isolation routine
-  // When the field goes disabled after the isolation period this task will die
-  // When the field goes enabled for the second time this task will start again
-  // and we will enter the interaction period. 
-  // ..........................................................................
-
   if(firstAutoFlag)
-    auto_Isolation();
+    auton_isolation();
   else 
-    auto_Interaction();
-
+    auton_interaction();
+  
   firstAutoFlag = false;
 }
 
 int main() {
 
-  // static AI_RECORD local_map; // local storage for latest data from the Jetson Nano
+  static AI_RECORD local_map; // local storage for latest data from the Jetson Nano
   
   int32_t loop_time = 33; // Run at about 15Hz
-
-  leftDriveSmart.setStopping(brake);
-  rightDriveSmart.setStopping(brake);
 
   GPS.calibrate();
   waitUntil(!(GPS.isCalibrating()));
 
   DrivetrainInertial.calibrate();
   waitUntil(!(DrivetrainInertial.isCalibrating()));
-  wait(500, timeUnits::msec);
-
+  
   DrivetrainInertial.setHeading(GPS.heading(), rotationUnits::deg);
-  odomraiser.set(false);
 
   OpticalSensor.setLight(ledState::on);
   OpticalSensor.setLightPower(100, percent);
-  
+
   // start the status update display
   thread t1(dashboardTask);
 
   // Set up callbacks for autonomous and driver control periods.
   Competition.autonomous(autonomousMain);
-  // Competition.drivercontrol(teleop);
+  Competition.drivercontrol(teleop);
     // autonomousMain();
 
   // print through the controller to the terminal (vexos 1.0.12 is needed)
@@ -132,7 +102,7 @@ int main() {
   //FILE *fp = fopen("/dev/serial2","wb");
   // this_thread::sleep_for(loop_time);
 
-  while(1) {
+  // while(1) {
   //     // get last map data
   //     jetson_comms.get_data( &local_map );
 
@@ -146,6 +116,6 @@ int main() {
   //     jetson_comms.request_map();
 
   //     // Allow other tasks to run
-      this_thread::sleep_for(loop_time);
-  }
+  //     this_thread::sleep_for(loop_time);
+  // }
 }

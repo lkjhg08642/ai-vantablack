@@ -1000,7 +1000,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if( (target_x < -68 && target_y > 68) || (target_x < -70)){
+            if( (target_x > 68 && target_y < -68) || (target_x > 70) || (target_x < 24) || (target_y > -15)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;
@@ -1055,7 +1055,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if(distance > 35){
+            if((target_x < -50 && target_y > -15)||(distance > 35) || (target_x > -24) || (target_y > -15)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;

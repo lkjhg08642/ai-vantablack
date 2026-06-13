@@ -902,7 +902,7 @@ void intakeLoader(){
 
 void auton_isolation(){
 
-    DrivetrainInertial.setHeading(180, rotationUnits::deg);
+    DrivetrainInertial.setHeading(0, rotationUnits::deg);
     leftDriveSmart.setStopping(brakeType::hold);
     rightDriveSmart.setStopping(brakeType::hold);
     intake.setStopping(brakeType::hold);
@@ -943,7 +943,7 @@ void auton_interaction(){
     
     // start looking
 
-    angle = 175;
+    angle = 10;
     
     vex::timer location1timer;
     location1timer.clear();
@@ -961,7 +961,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if( (target_x < -68 && target_y > 68) || (target_x < -70)){
+            if( (target_x > 69 && target_y > 69) || (target_x > 70) || (target_x < 23.75) || (target_y < 12)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;
@@ -979,12 +979,12 @@ void auton_interaction(){
                 forwardStraight(-distance);
 
                 wait(timeToRest, timeUnits::msec);
-                turnToReverse(23.75, 47.5);
-                distance = distanceTo(23.75, 46);
+                turnToReverse(23.75, 47);
+                distance = distanceTo(23.75, 47);
                 intakemotorrunning = false;
                 forwardStraight(-distance);
 
-                autoOuttakeHigh(1500, 8);
+                autoOuttakeHigh(2000, 8);
 
                 forwardStraight(12);
             }
@@ -995,9 +995,11 @@ void auton_interaction(){
         
     }
 
+    outtake_raiser.set(false);
+
     pathFindTo(-23,20);
 
-    angle = 270;
+    angle = 235;
 
     vex::timer location2timer;
     location2timer.clear();
@@ -1015,7 +1017,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if(distance > 35){
+            if((target_x < -50 && target_y < 15) || (distance > 35) || (target_x > -24)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;
@@ -1034,8 +1036,7 @@ void auton_interaction(){
                 wait(timeToRest, timeUnits::msec);
                 turnToReverse(0,0);
                 intakemotorrunning = false;
-                outtake_raiser.set(false);
-                forwardStraight(-distanceTo(0,0) + 14);
+                forwardStraight(- (distanceTo(0,0) - 14));
 
                 autoOuttakeHigh(2000, 9);
 
@@ -1049,7 +1050,7 @@ void auton_interaction(){
     pathFindTo(34, 27);
     
 
-    turnToAbsolute(90);
+    turnToAbsolute(270);
     
 
     leftDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
@@ -1062,19 +1063,19 @@ void auton_interaction(){
 
     forwardStraight(30);
 
-    turnToAbsolute(0);
+    turnToAbsolute(180);
 
     leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
     rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
 
-    while(currY < -5){
+    while(currY > 5){
         wait(5, timeUnits::msec);
     }
     
     leftDriveSmart.stop(brake);
     rightDriveSmart.stop(brake);
 
-    turnToAbsolute(90);
+    turnToAbsolute(270);
 
     odomraiser.set(true);
     wait(300, timeUnits::msec);

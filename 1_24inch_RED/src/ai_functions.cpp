@@ -941,9 +941,9 @@ void auton_interaction(){
     forwardStraight(12);
     // outtake_raiser.set(false);
     
-    // start looking
+    // start looking 
 
-    angle = 355;
+    angle = 175;
     
     vex::timer location1timer;
     location1timer.clear();
@@ -961,7 +961,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if( (target_x < -68 && target_y > 68) || (target_x < -70)){
+            if( (target_x < -68 && target_y < - 68) || (target_x < -70) || (target_x > -24) || (target_y > -15)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;
@@ -979,8 +979,8 @@ void auton_interaction(){
                 forwardStraight(-distance);
 
                 wait(timeToRest, timeUnits::msec);
-                turnToReverse(-23.75, -47.5);
-                distance = distanceTo(-23.75, -46);
+                turnToReverse(-23.75, -47);
+                distance = distanceTo(-23.75, -47);
                 intakemotorrunning = false;
                 forwardStraight(-distance);
 
@@ -991,13 +991,13 @@ void auton_interaction(){
 
         } 
         
-        angle = angle + 30;
+        angle = angle - 30;
         
     }
 
     pathFindTo(23,-20);
 
-    angle = 90;
+    angle = 55;
 
     vex::timer location2timer;
     location2timer.clear();
@@ -1015,7 +1015,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if(distance > 40){
+            if((target_x > 50 && target_y > -15) || (distance > 35)|| (target_x < 24) || (target_y > -15)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;

@@ -914,7 +914,7 @@ void auton_isolation(){
     intakemotorrunning = true;
     vex::task t1(autoIntake);
     forwardStraight(23.5);
-    turnToAbsolute(270);
+    turnToAbsolute(90);
     loader.set(true);
     forwardStraight(10.0);
 

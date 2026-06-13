@@ -35,7 +35,7 @@ bool odom_raised = false;
 bool loader_dropped = false;
 bool descore_raised = false;
 
-int currColor = 2; //0 blue, 1 red
+int currColor = 2; //0 blue, 2 red
 
 const int N = 47;
 int field[N][N] = {

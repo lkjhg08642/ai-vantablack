@@ -931,14 +931,14 @@ void auton_isolation(){
     slideMotor2.setPosition(0, rotationUnits::deg);
 
     forwardStraight(25.0);
-    turnToAbsolute(340);
+    turnToAbsolute(160);
 
     intakemotorrunning = true;
     vex::task t1(autoIntake);
     forwardStraight(18.0, 400.0);
 
     wait(500, timeUnits::msec);
-    turnToAbsolute(320);
+    turnToAbsolute(140);
     forwardStraight(-20.0);
     intakemotorrunning = false;
 
@@ -961,8 +961,8 @@ void auton_isolation(){
     forwardStraight(distance, 355.0);
     
     wait(500, timeUnits::msec);
-    turnToReverse(-23.75, 46);
-    distance = distanceTo(-23.75, 46);
+    turnToReverse(23.75, -46);
+    distance = distanceTo(23.75, -46);
     intakemotorrunning = false;
     vex::task t3(slideUpToHigh);
     forwardStraight(-distance);

@@ -973,7 +973,7 @@ void skills(){
 
     forwardStraight(18.0);
 
-    angle = 220;
+    angle = 190;
 
     currColor = 1;
 
@@ -990,7 +990,7 @@ void skills(){
 
         if(target.classID != -1){
 
-            if( (target_x < -68 && target_y > 68) || (target_x < -70) || (target_x > -23.75) || target_y > -20){
+            if( (target_x < -68 && target_y < -68) || (target_x < -70) || (target_x > -23.75) || target_y > -20){
 
             }else{ // ok to intake
                 intakemotorrunning = true;
@@ -1022,7 +1022,7 @@ void skills(){
 
         } 
         
-        angle = angle - 30;
+        angle = angle + 30;
         
     }
 

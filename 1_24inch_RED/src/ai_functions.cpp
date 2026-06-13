@@ -912,6 +912,15 @@ void auton_isolation(){
     autonTimer.clear();
 
     intakemotorrunning = true;
+    
+    leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+    rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+    while(FrontDis.objectDistance(mm) > 510) { 
+        wait(20, timeUnits::msec);
+    }
+    leftDriveSmart.stop(brake);
+    rightDriveSmart.stop(brake);
+
     vex::task t1(autoIntake);
     forwardStraight(23.5);
     turnToAbsolute(270);
@@ -931,6 +940,8 @@ void auton_isolation(){
 
 
 void auton_interaction(){
+
+    loader.set(false);
 
     int timeToRest = 500;
     double distance, angle, target_x, target_y;

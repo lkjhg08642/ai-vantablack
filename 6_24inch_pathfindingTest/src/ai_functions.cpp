@@ -18,6 +18,8 @@
 #include <queue>
 #include <cmath>
 #include <algorithm>
+#include <cstdlib>
+#include <utility>
 using namespace vex;
 using namespace std;
 
@@ -35,7 +37,7 @@ bool odom_raised = false;
 bool loader_dropped = false;
 bool descore_raised = false;
 
-int currColor = 0; //0 blue, 2 red
+int currColor = 2; //0 blue, 2 red
 
 const int N = 47;
 int field[N][N] = {
@@ -92,27 +94,21 @@ int field[N][N] = {
 // Higher cost near obstacles so A* prefers routes through open space.
 double clearanceCost[N][N];
 
-const double CLEAR_RADIUS = 5.0;   // cells: how far the "stay away" influence reaches
-const double CLEAR_WEIGHT = 12.0;  // how strongly to avoid obstacles (raise = wider berth)
+const double CLEAR_RADIUS = 8.0;    // cells: how far avoidance reaches
+const double CLEAR_WEIGHT = 60.0;   // strength of avoidance (raise = wider berth)
 
-// Compute, for each free cell, an approximate distance (in cells) to the
-// nearest obstacle, then turn that into a penalty. Call once at startup.
 void computeClearanceCost() {
-    // Step 1: brute-force nearest-obstacle distance via multi-source BFS.
-    // dist = 0 on obstacles, grows outward into free space.
     static double dist[N][N];
     std::queue<std::pair<int,int>> q;
-
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++) {
             if (field[r][c] == 1) { dist[r][c] = 0.0; q.push({r, c}); }
-            else                   dist[r][c] = 1e9;
+            else                    dist[r][c] = 1e9;
         }
-
     int dR[4] = {-1, 1, 0, 0};
     int dC[4] = {0, 0, -1, 1};
     while (!q.empty()) {
-        auto cur = q.front(); q.pop();
+        std::pair<int,int> cur = q.front(); q.pop();
         int r = cur.first, c = cur.second;
         for (int k = 0; k < 4; k++) {
             int nr = r + dR[k], nc = c + dC[k];
@@ -123,61 +119,50 @@ void computeClearanceCost() {
             }
         }
     }
-
-    // Step 2: convert distance to a penalty. Cells within CLEAR_RADIUS of an
-    // obstacle pay extra; cells farther away pay nothing.
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++) {
             if (field[r][c] == 1) { clearanceCost[r][c] = 0.0; continue; }
-            double d = dist[r][c];
-            double pen = (CLEAR_RADIUS - d) * (CLEAR_WEIGHT / CLEAR_RADIUS);
-            clearanceCost[r][c] = (pen > 0.0) ? pen : 0.0;
+            double closeness = (CLEAR_RADIUS - dist[r][c]) / CLEAR_RADIUS;
+            if (closeness < 0.0) closeness = 0.0;
+            clearanceCost[r][c] = closeness * closeness * CLEAR_WEIGHT;
         }
 }
 
 // ---------- Coordinate conversions ----------
-const double CELL = 3.0;       // inches per grid cell
-const int    CENTER = 23;      // center index
+const double CELL   = 3.0;    // inches per grid cell
+const int    CENTER = 23;     // center index (0,0) in GPS
 
-// GPS (inches, center origin, +X right, +Y up) -> matrix index
-void GPStoGrid(double currX, double currY, int &row, int &col) {
-    col = (int)round(currX / CELL) + CENTER;
-    row = CENTER - (int)round(currY / CELL);
+void GPStoGrid(double gx, double gy, int &row, int &col) {
+    col = (int)round(gx / CELL) + CENTER;
+    row = CENTER - (int)round(gy / CELL);
     if (col < 0) col = 0; if (col > N-1) col = N-1;
     if (row < 0) row = 0; if (row > N-1) row = N-1;
 }
 
-// matrix index -> GPS (inches, center origin)
 void gridToGPS(int row, int col, double &X, double &Y) {
     X = (col - CENTER) * CELL;
     Y = (CENTER - row) * CELL;
 }
 
-// ---------- A* (4-connectivity) ----------
-struct Cell { int r, c; };
-
-int heuristic(int r, int c, int gr, int gc) {
-    return abs(r - gr) + abs(c - gc);   // Manhattan
+// ============================================================================
+//  A*  (8-connected, octile heuristic, clearance-aware)
+// ============================================================================
+double heuristic(int r, int c, int gr, int gc) {
+    int dr = abs(r - gr), dc = abs(c - gc);
+    int mn = (dr < dc) ? dr : dc;
+    int mx = (dr > dc) ? dr : dc;
+    return (mx - mn) + 1.41421356 * mn;   // octile
 }
 
-// ---------- Snap a cell to the nearest free (value 0) cell ----------
-// BFS outward from (r,c). If (r,c) is already free, returns it unchanged.
-// Sets outR/outC to the nearest free cell. Returns false if the whole grid
-// is blocked (should never happen on a real field).
+// Snap a cell to the nearest free cell via BFS (handles start/dest on a 1).
 bool nearestFreeCell(int r, int c, int &outR, int &outC) {
     if (field[r][c] == 0) { outR = r; outC = c; return true; }
-
     static bool seen[N][N];
-    for (int i = 0; i < N; i++)
-        for (int j = 0; j < N; j++) seen[i][j] = false;
-
+    for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) seen[i][j] = false;
     std::queue<std::pair<int,int>> q;
-    seen[r][c] = true;
-    q.push({r, c});
-
+    seen[r][c] = true; q.push({r, c});
     int dR[4] = {-1, 1, 0, 0};
     int dC[4] = {0, 0, -1, 1};
-
     while (!q.empty()) {
         std::pair<int,int> cur = q.front(); q.pop();
         int cr = cur.first, cc = cur.second;
@@ -185,35 +170,31 @@ bool nearestFreeCell(int r, int c, int &outR, int &outC) {
             int nr = cr + dR[k], nc = cc + dC[k];
             if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
             if (seen[nr][nc]) continue;
-            if (field[nr][nc] == 0) { outR = nr; outC = nc; return true; }  // closest free
-            seen[nr][nc] = true;
-            q.push({nr, nc});
+            if (field[nr][nc] == 0) { outR = nr; outC = nc; return true; }
+            seen[nr][nc] = true; q.push({nr, nc});
         }
     }
-    return false;   // no free cell anywhere
+    return false;
 }
 
 int aStar(int sr, int sc, int gr, int gc, int pathR[], int pathC[]) {
-    static double gScore[N][N];          // <-- double now
+    static double gScore[N][N];
     static bool   closed[N][N];
     static int    cameR[N][N], cameC[N][N];
-
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++) {
             gScore[r][c] = 1e18; closed[r][c] = false;
             cameR[r][c] = -1; cameC[r][c] = -1;
         }
-
-    // priority queue keyed by double fScore
     std::priority_queue<std::pair<double,int>,
         std::vector<std::pair<double,int>>,
         std::greater<std::pair<double,int>>> open;
-
     gScore[sr][sc] = 0.0;
-    open.push({(double)heuristic(sr, sc, gr, gc), sr * N + sc});
+    open.push({heuristic(sr, sc, gr, gc), sr * N + sc});
 
-    int dR[4] = {-1, 1, 0, 0};
-    int dC[4] = {0, 0, -1, 1};
+    int    dR[8]       = {-1,  1,  0,  0, -1, -1,  1,  1};
+    int    dC[8]       = { 0,  0, -1,  1, -1,  1, -1,  1};
+    double stepCost[8] = {1.0,1.0,1.0,1.0,1.41421356,1.41421356,1.41421356,1.41421356};
 
     while (!open.empty()) {
         int idx = open.top().second; open.pop();
@@ -221,65 +202,41 @@ int aStar(int sr, int sc, int gr, int gc, int pathR[], int pathC[]) {
         if (closed[r][c]) continue;
         closed[r][c] = true;
         if (r == gr && c == gc) break;
-
-        for (int k = 0; k < 4; k++) {
+        for (int k = 0; k < 8; k++) {
             int nr = r + dR[k], nc = c + dC[k];
             if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
             if (field[nr][nc] == 1) continue;
-
-            // base step cost (1) + clearance penalty for being near a wall
-            double ng = gScore[r][c] + 1.0 + clearanceCost[nr][nc];
-
+            if (dR[k] != 0 && dC[k] != 0) {                 // corner-cut guard
+                if (field[r][nc] == 1 || field[nr][c] == 1) continue;
+            }
+            double ng = gScore[r][c] + stepCost[k] + clearanceCost[nr][nc];
             if (ng < gScore[nr][nc]) {
                 gScore[nr][nc] = ng;
                 cameR[nr][nc] = r; cameC[nr][nc] = c;
-                open.push({ng + (double)heuristic(nr, nc, gr, gc), nr * N + nc});
+                open.push({ng + heuristic(nr, nc, gr, gc), nr * N + nc});
             }
         }
     }
-
     if (cameR[gr][gc] == -1 && !(sr == gr && sc == gc)) return 0;
-
-    // reconstruct (unchanged)
-    int tmpR[N*N], tmpC[N*N], len = 0;
+    static int tmpR[N*N], tmpC[N*N]; int len = 0;
     int r = gr, c = gc;
     while (!(r == sr && c == sc)) {
         tmpR[len] = r; tmpC[len] = c; len++;
-        int pr = cameR[r][c], pc = cameC[r][c];
-        r = pr; c = pc;
+        int pr = cameR[r][c], pc = cameC[r][c]; r = pr; c = pc;
     }
     tmpR[len] = sr; tmpC[len] = sc; len++;
-    for (int i = 0; i < len; i++) {
-        pathR[i] = tmpR[len - 1 - i];
-        pathC[i] = tmpC[len - 1 - i];
-    }
+    for (int i = 0; i < len; i++) { pathR[i] = tmpR[len-1-i]; pathC[i] = tmpC[len-1-i]; }
     return len;
 }
 
-// ---------- Keep only turning points ----------
-int extractTurns(int pathR[], int pathC[], int len, int turnR[], int turnC[]) {
-    if (len == 0) return 0;
-    int t = 0;
-    turnR[t] = pathR[0]; turnC[t] = pathC[0]; t++;   // start
-    for (int i = 1; i < len - 1; i++) {
-        int d1r = pathR[i]   - pathR[i-1], d1c = pathC[i]   - pathC[i-1];
-        int d2r = pathR[i+1] - pathR[i],   d2c = pathC[i+1] - pathC[i];
-        if (d1r != d2r || d1c != d2c) {              // direction changed
-            turnR[t] = pathR[i]; turnC[t] = pathC[i]; t++;
-        }
-    }
-    turnR[t] = pathR[len-1]; turnC[t] = pathC[len-1]; t++;   // destination
-    return t;
-}
-
-// ---------- Line-of-sight check (Bresenham) ----------
-// True if a straight line between two cells stays on free cells.
+// ============================================================================
+//  PATH POST-PROCESSING  — smoothing, merging, curving
+// ============================================================================
 bool lineOfSight(int r0, int c0, int r1, int c1) {
     int dr = abs(r1 - r0), dc = abs(c1 - c0);
     int sr = (r0 < r1) ? 1 : -1;
     int sc = (c0 < c1) ? 1 : -1;
-    int err = dc - dr;
-    int r = r0, c = c0;
+    int err = dc - dr, r = r0, c = c0;
     while (true) {
         if (field[r][c] == 1) return false;
         if (r == r1 && c == c1) break;
@@ -290,40 +247,43 @@ bool lineOfSight(int r0, int c0, int r1, int c1) {
     return true;
 }
 
-// ---------- Minimize turning points via line-of-sight shortcutting ----------
-// Collapses the staircase path to the fewest waypoints that preserve a clear route.
 int smoothPath(int pathR[], int pathC[], int len, int smR[], int smC[]) {
     if (len == 0) return 0;
     int count = 0, anchor = 0;
-    smR[count] = pathR[0]; smC[count] = pathC[0]; count++;
+    smR[0] = pathR[0]; smC[0] = pathC[0]; count++;
     int i = 1;
     while (i < len - 1) {
-        if (lineOfSight(pathR[anchor], pathC[anchor], pathR[i + 1], pathC[i + 1])) {
-            i++;                               // anchor can still see further
-        } else {
-            smR[count] = pathR[i]; smC[count] = pathC[i]; count++;  // lock corner
-            anchor = i; i++;
-        }
+        if (lineOfSight(pathR[anchor], pathC[anchor], pathR[i+1], pathC[i+1])) i++;
+        else { smR[count] = pathR[i]; smC[count] = pathC[i]; count++; anchor = i; i++; }
     }
-    smR[count] = pathR[len - 1]; smC[count] = pathC[len - 1]; count++;
+    smR[count] = pathR[len-1]; smC[count] = pathC[len-1]; count++;
     return count;
 }
 
-// ---------- Catmull-Rom spline: dense smooth points through waypoints ----------
-int catmullRom(double wpX[], double wpY[], int n,
-               double outX[], double outY[], int samplesPerSeg) {
-    if (n < 2) {
-        if (n == 1) { outX[0] = wpX[0]; outY[0] = wpY[0]; return 1; }
-        return 0;
+int mergeClose(int wpR[], int wpC[], int n, int minDistCells, int outR[], int outC[]) {
+    if (n <= 2) { for (int i = 0; i < n; i++) { outR[i] = wpR[i]; outC[i] = wpC[i]; } return n; }
+    int count = 0;
+    outR[0] = wpR[0]; outC[0] = wpC[0]; count++;
+    double minSq = (double)minDistCells * minDistCells;
+    for (int i = 1; i < n - 1; i++) {
+        int lr = outR[count-1], lc = outC[count-1];
+        double dr = wpR[i] - lr, dc = wpC[i] - lc;
+        if (dr*dr + dc*dc >= minSq) { outR[count] = wpR[i]; outC[count] = wpC[i]; count++; }
     }
+    outR[count] = wpR[n-1]; outC[count] = wpC[n-1]; count++;
+    return count;
+}
+
+int catmullRom(double wpX[], double wpY[], int n, double outX[], double outY[], int samplesPerSeg) {
+    if (n < 2) { if (n == 1) { outX[0]=wpX[0]; outY[0]=wpY[0]; return 1; } return 0; }
     int count = 0;
     for (int i = 0; i < n - 1; i++) {
-        double p0x = wpX[(i == 0) ? 0 : i - 1], p0y = wpY[(i == 0) ? 0 : i - 1];
-        double p1x = wpX[i],     p1y = wpY[i];
-        double p2x = wpX[i + 1], p2y = wpY[i + 1];
-        double p3x = wpX[(i + 2 >= n) ? n - 1 : i + 2], p3y = wpY[(i + 2 >= n) ? n - 1 : i + 2];
+        double p0x = wpX[(i==0)?0:i-1], p0y = wpY[(i==0)?0:i-1];
+        double p1x = wpX[i],   p1y = wpY[i];
+        double p2x = wpX[i+1], p2y = wpY[i+1];
+        double p3x = wpX[(i+2>=n)?n-1:i+2], p3y = wpY[(i+2>=n)?n-1:i+2];
         for (int s = 0; s < samplesPerSeg; s++) {
-            double t = (double)s / samplesPerSeg, t2 = t*t, t3 = t2*t;
+            double t = (double)s/samplesPerSeg, t2 = t*t, t3 = t2*t;
             outX[count] = 0.5*((2*p1x)+(-p0x+p2x)*t+(2*p0x-5*p1x+4*p2x-p3x)*t2+(-p0x+3*p1x-3*p2x+p3x)*t3);
             outY[count] = 0.5*((2*p1y)+(-p0y+p2y)*t+(2*p0y-5*p1y+4*p2y-p3y)*t2+(-p0y+3*p1y-3*p2y+p3y)*t3);
             count++;
@@ -331,6 +291,62 @@ int catmullRom(double wpX[], double wpY[], int n,
     }
     outX[count] = wpX[n-1]; outY[count] = wpY[n-1]; count++;
     return count;
+}
+
+bool gpsPointIsFree(double x, double y) {
+    int col = (int)round(x / CELL) + CENTER;
+    int row = CENTER - (int)round(y / CELL);
+    if (row < 0 || row >= N || col < 0 || col >= N) return false;
+    return (field[row][col] == 0);
+}
+bool curveIsFree(double cx[], double cy[], int cn) {
+    for (int i = 0; i < cn; i++) if (!gpsPointIsFree(cx[i], cy[i])) return false;
+    return true;
+}
+
+// ============================================================================
+//  DYNAMIC OBSTACLES  (other moving robots) — temporary blocks
+// ============================================================================
+const int MAX_DYN = 400;
+int dynR[MAX_DYN], dynC[MAX_DYN];
+int dynCount = 0;
+const int ROBOT_HALF_CELLS = 3;     // 18" robot -> 9" half -> 3 cells
+
+void markDynamicObstacle(int r, int c) {
+    if (r < 0 || r >= N || c < 0 || c >= N) return;
+    if (field[r][c] == 1) return;            // already blocked (real wall)
+    if (dynCount >= MAX_DYN) return;
+    field[r][c] = 1;
+    dynR[dynCount] = r; dynC[dynCount] = c; dynCount++;
+}
+void markDynamicPatch(int r0, int c0, int halfCells) {
+    for (int dr = -halfCells; dr <= halfCells; dr++)
+        for (int dc = -halfCells; dc <= halfCells; dc++)
+            markDynamicObstacle(r0 + dr, c0 + dc);
+}
+void clearDynamicObstacles() {
+    for (int i = 0; i < dynCount; i++) field[dynR[i]][dynC[i]] = 0;
+    dynCount = 0;
+}
+
+// ============================================================================
+//  COLLISION HANDLING
+// ============================================================================
+bool reachedWaypoint(double wx, double wy) {
+    int wr, wc, rr, rc;
+    GPStoGrid(wx, wy, wr, wc);
+    GPStoGrid(currX, currY, rr, rc);
+    return (wr == rr && wc == rc);
+}
+
+void blockCellAhead() {
+    double h = currH * M_PI / 180.0;
+    double aheadX = currX + 2.0 * CELL * sin(h);   // ~6" ahead -> obstacle body
+    double aheadY = currY + 2.0 * CELL * cos(h);
+    int r, c;
+    GPStoGrid(aheadX, aheadY, r, c);
+    markDynamicPatch(r, c, ROBOT_HALF_CELLS);      // 18"-footprint patch
+    computeClearanceCost();                         // field changed -> rebuild
 }
 
 ScoringPos getScoringPos(SCORING_LOCATIONS location) {
@@ -786,42 +802,75 @@ int autoOuttakeLow(){
     return 1;
 }
 
+// ============================================================================
+//  PATH FIND TO  — plan, drive, detect collisions, replan, refresh on arrival
+// ============================================================================
 bool pathFindTo(double destX, double destY) {
     static bool clearanceReady = false;
     if (!clearanceReady) { computeClearanceCost(); clearanceReady = true; }
 
-    int sr, sc, gr, gc;
-    GPStoGrid(currX, currY, sr, sc);
-    GPStoGrid(destX,  destY,  gr, gc);
+    const int    MAX_REPLANS = 6;
+    const double BACKUP_IN    = 10.0;
+    const int    MERGE_CELLS  = 3;
 
-    // --- snap start and destination out of any blocked cell ---
-    int sr2, sc2, gr2, gc2;
-    if (!nearestFreeCell(sr, sc, sr2, sc2)) { Brain.Screen.print("No free start"); return false; }
-    if (!nearestFreeCell(gr, gc, gr2, gc2)) { Brain.Screen.print("No free dest");  return false; }
-    sr = sr2; sc = sc2;
-    gr = gr2; gc = gc2;
+    bool success = false;
 
-    static int pathR[N*N], pathC[N*N];
-    int len = aStar(sr, sc, gr, gc, pathR, pathC);
-    if (len == 0) { Brain.Screen.print("No path found"); return false; }
+    for (int attempt = 0; attempt < MAX_REPLANS; attempt++) {
+        int sr, sc, gr, gc;
+        GPStoGrid(currX, currY, sr, sc);
+        GPStoGrid(destX,  destY,  gr, gc);
 
-    static int smR[N*N], smC[N*N];
-    int pts = smoothPath(pathR, pathC, len, smR, smC);
+        int sr2, sc2, gr2, gc2;
+        if (!nearestFreeCell(sr, sc, sr2, sc2)) { Brain.Screen.print("No free start"); break; }
+        if (!nearestFreeCell(gr, gc, gr2, gc2)) { Brain.Screen.print("No free dest");  break; }
+        sr = sr2; sc = sc2; gr = gr2; gc = gc2;
 
-    static double wpX[N*N], wpY[N*N];
-    for (int i = 0; i < pts; i++)
-        gridToGPS(smR[i], smC[i], wpX[i], wpY[i]);
+        static int pathR[N*N], pathC[N*N];
+        int len = aStar(sr, sc, gr, gc, pathR, pathC);
+        if (len == 0) { Brain.Screen.print("No path found"); break; }
 
-    static double curveX[N*N], curveY[N*N];
-    int cn = catmullRom(wpX, wpY, pts, curveX, curveY, 4);
+        static int smR[N*N], smC[N*N];
+        int pts = smoothPath(pathR, pathC, len, smR, smC);
 
-    for (int i = 1; i < cn; i++) {
-        Controller1.Screen.setCursor(1,1);
-        Controller1.Screen.print("(%.2f, %.2f)", curveX[i], curveY[i]);
-        moveToPosition(curveX[i], curveY[i]);
-        wait(500, timeUnits::msec);
+        static int mgR[N*N], mgC[N*N];
+        pts = mergeClose(smR, smC, pts, MERGE_CELLS, mgR, mgC);
+
+        static double wpX[N*N], wpY[N*N];
+        for (int i = 0; i < pts; i++) gridToGPS(mgR[i], mgC[i], wpX[i], wpY[i]);
+
+        static double curveX[N*N], curveY[N*N];
+        int cn = catmullRom(wpX, wpY, pts, curveX, curveY, 8);
+        bool useCurve = curveIsFree(curveX, curveY, cn);
+
+        // Drive either the safe curve or the straight waypoints.
+        int driveN      = useCurve ? cn  : pts;
+        double *dx      = useCurve ? curveX : wpX;
+        double *dy      = useCurve ? curveY : wpY;
+
+        bool blocked = false;
+        for (int i = 1; i < driveN; i++) {
+            Controller1.Screen.setCursor(1,1);
+            Controller1.Screen.print("(%.1f, %.1f)   ", dx[i], dy[i]);
+            moveToPosition(dx[i], dy[i]);
+
+            if (!reachedWaypoint(dx[i], dy[i])) {
+                Controller1.Screen.setCursor(2,1);
+                Controller1.Screen.print("Blocked! replanning");
+                forwardStraight(-BACKUP_IN);     // reverse 10"
+                blockCellAhead();      // mark moving-robot footprint + refresh
+                blocked = true;
+                break;
+            }
+        }
+        if (!blocked) { success = true; break; }
     }
-    return true;
+
+    // Refresh the map: moving-robot blocks are temporary, wipe them all.
+    clearDynamicObstacles();
+    computeClearanceCost();
+
+    if (!success) Brain.Screen.print("Gave up after max replans");
+    return success;
 }
 
 void scoreIn(SCORING_LOCATIONS location, int time) {
@@ -902,7 +951,7 @@ void intakeLoader(){
 
 void auton_isolation(){
 
-    DrivetrainInertial.setHeading(0, rotationUnits::deg);
+    DrivetrainInertial.setHeading(180, rotationUnits::deg);
     leftDriveSmart.setStopping(brakeType::hold);
     rightDriveSmart.setStopping(brakeType::hold);
     intake.setStopping(brakeType::hold);
@@ -914,7 +963,7 @@ void auton_isolation(){
     intakemotorrunning = true;
     vex::task t1(autoIntake);
     forwardStraight(23.5);
-    turnToAbsolute(90);
+    turnToAbsolute(270);
     loader.set(true);
     forwardStraight(10.0);
 
@@ -929,10 +978,8 @@ void auton_isolation(){
 
 }
 
-//GPS COORDINATES WRONG!!!
-void auton_interaction(){
 
-    loader.set(false);
+void auton_interaction(){
 
     int timeToRest = 500;
     double distance, angle, target_x, target_y;
@@ -943,9 +990,9 @@ void auton_interaction(){
     forwardStraight(12);
     // outtake_raiser.set(false);
     
-    // start looking
+    // start looking 
 
-    angle = 10;
+    angle = 175;
     
     vex::timer location1timer;
     location1timer.clear();
@@ -963,7 +1010,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if( (target_x > 69 && target_y > 69) || (target_x > 70) || (target_x < 23.75) || (target_y < 12)){
+            if( (target_x < -68 && target_y < - 68) || (target_x < -70) || (target_x > -24) || (target_y > -15)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;
@@ -976,32 +1023,30 @@ void auton_interaction(){
                 //intake one more ball already
 
                 wait(timeToRest, timeUnits::msec);
-                turnToReverse(36, 46);
-                distance = distanceTo(36, 46);
+                turnToReverse(-36, -46);
+                distance = distanceTo(-36, -46);
                 forwardStraight(-distance);
 
                 wait(timeToRest, timeUnits::msec);
-                turnToReverse(23.75, 47);
-                distance = distanceTo(23.75, 47);
+                turnToReverse(-23.75, -47);
+                distance = distanceTo(-23.75, -47);
                 intakemotorrunning = false;
                 forwardStraight(-distance);
 
-                autoOuttakeHigh(2000, 8);
+                autoOuttakeHigh(1500, 8);
 
                 forwardStraight(12);
             }
 
         } 
         
-        angle = angle + 30;
+        angle = angle - 30;
         
     }
 
-    outtake_raiser.set(false);
+    pathFindTo(23,-20);
 
-    pathFindTo(-23,20);
-
-    angle = 235;
+    angle = 55;
 
     vex::timer location2timer;
     location2timer.clear();
@@ -1019,7 +1064,7 @@ void auton_interaction(){
 
         if(target.classID != -1){
 
-            if((target_x < -50 && target_y < 15) || (distance > 35) || (target_x > -24)){
+            if((target_x > 50 && target_y > -15) || (distance > 35)|| (target_x < 24) || (target_y > -15)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;
@@ -1031,14 +1076,15 @@ void auton_interaction(){
                 //intake one more ball already
 
                 wait(timeToRest, timeUnits::msec);
-                turnToReverse(-23,20);
-                distance = distanceTo(-23,20);
+                turnToReverse(23,-20);
+                distance = distanceTo(23,-20);
                 forwardStraight(-distance);
 
                 wait(timeToRest, timeUnits::msec);
                 turnToReverse(0,0);
                 intakemotorrunning = false;
-                forwardStraight(- (distanceTo(0,0) - 14));
+                outtake_raiser.set(false);
+                forwardStraight(-distanceTo(0,0) + 14);
 
                 autoOuttakeHigh(2000, 9);
 
@@ -1049,10 +1095,10 @@ void auton_interaction(){
         angle = angle + 25;
     }
 
-    pathFindTo(34, 27);
+    pathFindTo(-34, -27);
     
 
-    turnToAbsolute(270);
+    turnToAbsolute(90);
     
 
     leftDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
@@ -1065,19 +1111,19 @@ void auton_interaction(){
 
     forwardStraight(30);
 
-    turnToAbsolute(180);
+    turnToAbsolute(0);
 
     leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
     rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
 
-    while(currY > 5){
+    while(currY < -5){
         wait(5, timeUnits::msec);
     }
     
     leftDriveSmart.stop(brake);
     rightDriveSmart.stop(brake);
 
-    turnToAbsolute(270);
+    turnToAbsolute(90);
 
     odomraiser.set(true);
     wait(300, timeUnits::msec);

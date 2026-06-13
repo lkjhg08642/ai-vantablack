@@ -929,134 +929,19 @@ void auton_isolation(){
 
 }
 
-//GPS COORDINATES WRONG!!!
 void auton_interaction(){
 
     loader.set(false);
 
-    int timeToRest = 500;
-    double distance, angle, target_x, target_y;
-    DETECTION_OBJECT target;
-
-    // DrivetrainInertial.setHeading(270, rotationUnits::deg);
-
     forwardStraight(12);
-    // outtake_raiser.set(false);
-    
-    // start looking
-
-    angle = 10;
-    
-    vex::timer location1timer;
-    location1timer.clear();
-
-    while (location1timer.time(vex::timeUnits::sec) < 30){
-
-        turnToAbsolute(angle);
-        
-        wait(timeToRest, timeUnits::msec);
-        target = findTarget(local_map);
-
-        target_x = target.mapLocation.x / 0.0254;
-        target_y = target.mapLocation.y / 0.0254;
-        distance = distanceTo(target_x, target_y) - 2;
-
-        if(target.classID != -1){
-
-            if( (target_x > 69 && target_y > 69) || (target_x > 70) || (target_x < 23.75) || (target_y < 12)){
-
-            }else{ // ok to intake
-                intakemotorrunning = true;
-                vex::task t5(autoIntakeColor);
-                
-                turnTo(target_x, target_y);
-                turnToRelative(2);
-                
-                forwardStraight(distance, 355.0);
-                //intake one more ball already
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(36, 46);
-                distance = distanceTo(36, 46);
-                forwardStraight(-distance);
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(23.75, 47);
-                distance = distanceTo(23.75, 47);
-                intakemotorrunning = false;
-                forwardStraight(-distance);
-
-                autoOuttakeHigh(2000, 8);
-
-                forwardStraight(12);
-            }
-
-        } 
-        
-        angle = angle + 30;
-        
-    }
-
-    outtake_raiser.set(false);
-
-    pathFindTo(-23,20);
-
-    angle = 235;
-
-    vex::timer location2timer;
-    location2timer.clear();
-
-    while (location2timer.time(vex::timeUnits::sec) < 30){
-
-        turnToAbsolute(angle);
-        
-        wait(timeToRest, timeUnits::msec);
-        target = findTarget(local_map);
-
-        target_x = target.mapLocation.x / 0.0254;
-        target_y = target.mapLocation.y / 0.0254;
-        distance = distanceTo(target_x, target_y) - 2;
-
-        if(target.classID != -1){
-
-            if((target_x < -50 && target_y < 15) || (distance > 35) || (target_x > -24)){
-
-            }else{ // ok to intake
-                intakemotorrunning = true;
-                vex::task t5(autoIntakeColor);
-                
-                turnTo(target_x, target_y);
-                
-                forwardStraight(distance, 355.0);
-                //intake one more ball already
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(-23,20);
-                distance = distanceTo(-23,20);
-                forwardStraight(-distance);
-
-                wait(timeToRest, timeUnits::msec);
-                turnToReverse(0,0);
-                intakemotorrunning = false;
-                forwardStraight(- (distanceTo(0,0) - 14));
-
-                autoOuttakeHigh(2000, 9);
-
-                forwardStraight(10);
-            }
-
-        }
-        angle = angle + 25;
-    }
 
     pathFindTo(34, 27);
-    
 
     turnToAbsolute(270);
     
 
-    leftDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
+    leftDriveSmart.spin(vex::directionType::rev, 8, vex::voltageUnits::volt);
+    rightDriveSmart.spin(vex::directionType::rev, 8, vex::voltageUnits::volt);
 
     wait(2000, timeUnits::msec);
 

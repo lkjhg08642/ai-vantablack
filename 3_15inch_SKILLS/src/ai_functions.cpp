@@ -1034,7 +1034,7 @@ void skills(){
 
     intakemotorrunning = false;
 
-    angle = 140;
+    angle = 170;
 
     currColor = 0;
 
@@ -1051,7 +1051,7 @@ void skills(){
 
         if(target.classID != -1){
 
-            if( (target_x < -68 && target_y > 68) || (target_x < -70) || (target_x > -23.75)){
+            if( (target_x > 68 && target_y < -68) || (target_x > 70) || (target_x < 23.75) || (target_y > -15)){
 
             }else{ // ok to intake
                 intakemotorrunning = true;

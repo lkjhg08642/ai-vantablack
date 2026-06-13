@@ -59,11 +59,11 @@ ai::robot_link       link(PORT7, "6599A_AI_robot", linkType::worker );
 // #endif
 
 void auto_Isolation(void) {
-	auton_isolation();
+	skills();
 }
 
 void auto_Interaction(void) {
-	auton_interaction();
+	skills();
 }
 
 bool firstAutoFlag = true;
@@ -105,8 +105,8 @@ int main() {
   thread t1(dashboardTask);
 
   // Set up callbacks for autonomous and driver control periods.
-  skills();
-  // Competition.autonomous(autonomousMain);
+  // Competition.autonomous(skills);
+  Competition.autonomous(autonomousMain);
   // Competition.drivercontrol(teleop);
     // autonomousMain();
 

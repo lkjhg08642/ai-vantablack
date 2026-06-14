@@ -603,9 +603,9 @@ int blockColor(){ // 0 blue, 1 red, 2 none
     float hue; 
     hue = OpticalSensor.hue();
 
-    if(hue < 20 && hue >0){return 1;}
+    if(hue < 20 && hue >0){return 2;}
     if(hue < 220 && hue >200){return 0;}
-    return 2;
+    return 1;
 }
 
 int autoIntakeColor() {
@@ -711,6 +711,7 @@ int autoIntake() {
     outtake.setStopping(brakeType::hold);
     return 1;
 }
+
 void autoOuttakeHigh(int time, int voltage = 12) {
 
     outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
@@ -720,10 +721,10 @@ void autoOuttakeHigh(int time, int voltage = 12) {
     timer.clear();
 
     while(timer.time(timeUnits::msec) < time) {
-        if (currColor == 0 && blockColor() == 1) {
+        if (currColor == 0 && blockColor() == 2) {
             outtake.stop();
             intake.stop();
-            forwardStraight(5.0);
+            forwardStraight(3.0);
             outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
             intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
             while(!(blockColor() == currColor)){
@@ -735,10 +736,11 @@ void autoOuttakeHigh(int time, int voltage = 12) {
             outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
             intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
         }
-         else if (currColor == 1 && blockColor() == 0) { 
+         else if (currColor == 2 && blockColor() == 0) { 
             outtake.stop();
             intake.stop();
-            forwardStraight(5.0);
+            forwardStraight(3.0);
+            turnToRelative(20);
             outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
             intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
             while(!(blockColor() == currColor)){
@@ -746,6 +748,7 @@ void autoOuttakeHigh(int time, int voltage = 12) {
             }
             outtake.stop();
             intake.stop();
+            turnToRelative(-20);
             forwardStraight(-7.0);
             outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
             intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
@@ -902,6 +905,8 @@ void intakeLoader(){
 
 void auton_isolation(){
 
+    Controller1.Screen.print("isolation");
+
     DrivetrainInertial.setHeading(0, rotationUnits::deg);
     leftDriveSmart.setStopping(brakeType::hold);
     rightDriveSmart.setStopping(brakeType::hold);
@@ -913,7 +918,8 @@ void auton_isolation(){
 
     intakemotorrunning = true;
     vex::task t1(autoIntake);
-    forwardStraight(23.5);
+    forwardStraight(39);
+    forwardStraight(-6.7);
     turnToAbsolute(90);
     loader.set(true);
     forwardStraight(10.0);
@@ -921,16 +927,19 @@ void auton_isolation(){
     intakeLoader();
 
     outtake_raiser.set(true);
-    forwardStraight(-27);
+    forwardStraight(-5, 400.0);
+    turnToAbsolute(91);
+    forwardStraight(-22);
 
     intakemotorrunning = false;
 
-    autoOuttakeHigh( (16 - autonTimer.time(vex::timeUnits::sec))*1000, 9);
+    autoOuttakeHigh( (16 - autonTimer.time(vex::timeUnits::sec))*1000, 12);
 
 }
 
-//GPS COORDINATES WRONG!!!
 void auton_interaction(){
+
+    Controller1.Screen.print("interaction");
 
     loader.set(false);
 
@@ -1124,7 +1133,7 @@ void teleop(void) {
 
 
     if (Controller1.ButtonB.pressing()) { 
-        auton_isolation();
+        auton_interaction();
         // forwardStraight(24);
     }
     // if (Controller1.ButtonB.pressing()) { 

@@ -922,7 +922,8 @@ void auton_isolation(){
     rightDriveSmart.stop(brake);
 
     vex::task t1(autoIntake);
-    forwardStraight(23.5);
+    forwardStraight(39);
+    forwardStraight(-6.7);
     turnToAbsolute(270);
     loader.set(true);
     forwardStraight(10.0);
@@ -930,7 +931,9 @@ void auton_isolation(){
     intakeLoader();
 
     outtake_raiser.set(true);
-    forwardStraight(-27);
+    forwardStraight(-5, 400.0);
+    turnToAbsolute(271);
+    forwardStraight(-22);
 
     intakemotorrunning = false;
 
@@ -943,10 +946,11 @@ void auton_interaction(){
 
     loader.set(false);
 
-
-    pathFindTo(-34, -27);
+    forwardStraight(12);
+    turnToAbsolute(0);
+    forwardStraight(20);
     
-
+    // pathFindTo(-34, -27);
     turnToAbsolute(90);
     
 
@@ -965,7 +969,7 @@ void auton_interaction(){
     leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
     rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
 
-    while(currY < -8){
+    while(currY < -5){
         wait(5, timeUnits::msec);
     }
     

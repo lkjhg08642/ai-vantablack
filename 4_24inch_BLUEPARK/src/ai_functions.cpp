@@ -913,7 +913,8 @@ void auton_isolation(){
 
     intakemotorrunning = true;
     vex::task t1(autoIntake);
-    forwardStraight(23.5);
+    forwardStraight(39);
+    forwardStraight(-6.7);
     turnToAbsolute(90);
     loader.set(true);
     forwardStraight(10.0);
@@ -921,11 +922,13 @@ void auton_isolation(){
     intakeLoader();
 
     outtake_raiser.set(true);
-    forwardStraight(-27);
+    forwardStraight(-5, 400.0);
+    turnToAbsolute(91);
+    forwardStraight(-22);
 
     intakemotorrunning = false;
 
-    autoOuttakeHigh( (16 - autonTimer.time(vex::timeUnits::sec))*1000, 9);
+    autoOuttakeHigh( (16 - autonTimer.time(vex::timeUnits::sec))*1000, 12);
 
 }
 
@@ -934,9 +937,9 @@ void auton_interaction(){
     loader.set(false);
 
     forwardStraight(12);
-
-    pathFindTo(34, 27);
-
+    turnToAbsolute(180);
+    forwardStraight(20);
+    //pathFindTo(34, 27);
     turnToAbsolute(270);
     
 

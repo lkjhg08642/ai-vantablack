@@ -603,9 +603,9 @@ int blockColor(){ // 0 blue, 1 red, 2 none
     float hue; 
     hue = OpticalSensor.hue();
 
-    if(hue < 20 && hue >0){return 1;}
+    if(hue < 20 && hue >0){return 2;}
     if(hue < 220 && hue >200){return 0;}
-    return 2;
+    return 1;
 }
 
 int autoIntakeColor() {
@@ -720,7 +720,7 @@ void autoOuttakeHigh(int time, int voltage = 12) {
     timer.clear();
 
     while(timer.time(timeUnits::msec) < time) {
-        if (currColor == 0 && blockColor() == 1) {
+        if (currColor == 0 && blockColor() == 2) {
             outtake.stop();
             intake.stop();
             forwardStraight(5.0);
@@ -735,7 +735,7 @@ void autoOuttakeHigh(int time, int voltage = 12) {
             outtake.spin(directionType::fwd, voltage, voltageUnits::volt);
             intake.spin(vex::directionType::fwd, voltage, voltageUnits::volt);
         }
-         else if (currColor == 1 && blockColor() == 0) { 
+         else if (currColor == 2 && blockColor() == 0) { 
             outtake.stop();
             intake.stop();
             forwardStraight(5.0);
@@ -901,28 +901,31 @@ void intakeLoader(){
 }
 
 void auton_isolation(){
+    Controller1.Screen.print("isolation");
 
     DrivetrainInertial.setHeading(180, rotationUnits::deg);
     leftDriveSmart.setStopping(brakeType::hold);
     rightDriveSmart.setStopping(brakeType::hold);
     intake.setStopping(brakeType::hold);
     outtake.setStopping(brakeType::hold);
+    wait(300, timeUnits::msec);
 
     vex::timer autonTimer;
     autonTimer.clear();
 
     intakemotorrunning = true;
     
-    leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-    rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
-    while(FrontDis.objectDistance(mm) > 510) { 
-        wait(20, timeUnits::msec);
-    }
-    leftDriveSmart.stop(brake);
-    rightDriveSmart.stop(brake);
+    // leftDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+    // rightDriveSmart.spin(vex::directionType::fwd, 3, vex::voltageUnits::volt);
+    // while(FrontDis.objectDistance(mm) > 510) { 
+    //     wait(20, timeUnits::msec);
+    // }
+    // leftDriveSmart.stop(brake);
+    // rightDriveSmart.stop(brake);
 
     vex::task t1(autoIntake);
-    forwardStraight(23.5);
+    forwardStraight(39);
+    forwardStraight(-6.7);
     turnToAbsolute(270);
     loader.set(true);
     forwardStraight(10.0);
@@ -930,7 +933,9 @@ void auton_isolation(){
     intakeLoader();
 
     outtake_raiser.set(true);
-    forwardStraight(-27);
+    forwardStraight(-5, 400.0);
+    turnToAbsolute(271);
+    forwardStraight(-22);
 
     intakemotorrunning = false;
 
@@ -941,6 +946,7 @@ void auton_isolation(){
 
 void auton_interaction(){
 
+    Controller1.Screen.print("interaction");
     loader.set(false);
 
     int timeToRest = 500;
@@ -1002,7 +1008,7 @@ void auton_interaction(){
 
         } 
         
-        angle = angle - 30;
+        angle = angle + 30;
         
     }
 
@@ -1132,7 +1138,7 @@ void teleop(void) {
 
 
     if (Controller1.ButtonB.pressing()) { 
-        auton_isolation();
+        auton_interaction();
         // forwardStraight(24);
     }
     // if (Controller1.ButtonB.pressing()) { 

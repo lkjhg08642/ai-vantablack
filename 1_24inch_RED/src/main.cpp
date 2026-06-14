@@ -75,7 +75,7 @@ void auto_Interaction(void) {
 	auton_interaction();
 }
 
-bool firstAutoFlag = true;
+bool first_auto_flag = true;
 
 void autonomousMain(void) {
   // ..........................................................................
@@ -85,12 +85,12 @@ void autonomousMain(void) {
   // and we will enter the interaction period. 
   // ..........................................................................
 
-  if(firstAutoFlag)
-    auto_Isolation();
+  if(first_auto_flag){
+    first_auto_flag = false;
+    auton_isolation();
+  }
   else 
-    auto_Interaction();
-
-  firstAutoFlag = false;
+    auton_interaction();
 }
 
 int main() {
@@ -120,7 +120,7 @@ int main() {
 
   // Set up callbacks for autonomous and driver control periods.
   Competition.autonomous(autonomousMain);
-  // Competition.drivercontrol(teleop);
+  Competition.drivercontrol(teleop);
     // autonomousMain();
 
   // print through the controller to the terminal (vexos 1.0.12 is needed)

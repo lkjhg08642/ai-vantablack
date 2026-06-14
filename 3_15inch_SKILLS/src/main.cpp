@@ -58,14 +58,6 @@ ai::jetson  jetson_comms;
 ai::robot_link       link(PORT7, "6599A_AI_robot", linkType::worker );
 // #endif
 
-void auto_Isolation(void) {
-	skills();
-}
-
-void auto_Interaction(void) {
-	skills();
-}
-
 bool firstAutoFlag = true;
 
 void autonomousMain(void) {
@@ -76,12 +68,13 @@ void autonomousMain(void) {
   // and we will enter the interaction period. 
   // ..........................................................................
 
-  if(firstAutoFlag)
-    auto_Isolation();
-  else 
-    auto_Interaction();
+  skills();
+  // if(firstAutoFlag)
+  //   auto_Isolation();
+  // else 
+  //   auto_Interaction();
 
-  firstAutoFlag = false;
+  // firstAutoFlag = false;
 }
 
 int main() {
@@ -106,8 +99,8 @@ int main() {
 
   // Set up callbacks for autonomous and driver control periods.
   // Competition.autonomous(skills);
-  Competition.autonomous(autonomousMain);
-  // Competition.drivercontrol(teleop);
+  Competition.autonomous(skills);
+  Competition.drivercontrol(skills);
     // autonomousMain();
 
   // print through the controller to the terminal (vexos 1.0.12 is needed)

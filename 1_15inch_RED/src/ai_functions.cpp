@@ -924,7 +924,7 @@ bool intakeTarget (DETECTION_OBJECT target) {
 }
 
 void auton_isolation(){
-
+    Controller1.Screen.print("isolation");
     double distance;
 
     slideMotor1.setPosition(0, rotationUnits::deg);
@@ -959,8 +959,13 @@ void auton_isolation(){
     turnTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254);
     distance = distanceTo(target.mapLocation.x / 0.0254, target.mapLocation.y / 0.0254) - 2;
     forwardStraight(distance, 355.0);
+
+    wait(400, timeUnits::msec);
+    turnToReverse(-36, 48);
+    distance = distanceTo(-36, 48);
+    forwardStraight(-distance);
     
-    wait(500, timeUnits::msec);
+    wait(400, timeUnits::msec);
     turnToReverse(-23.75, 46);
     distance = distanceTo(-23.75, 46);
     intakemotorrunning = false;
@@ -971,11 +976,13 @@ void auton_isolation(){
 }
 
 void auton_interaction(){
+
+    Controller1.Screen.print("interaction");
     int timeToRest = 350;
     double distance, angle, target_x, target_y;
     DETECTION_OBJECT target;
 
-    forwardStraight(12);
+    forwardStraight(10);
     vex::task t4(slideMoveToBottomPosition);
     
     // //start looking
@@ -986,7 +993,7 @@ void auton_interaction(){
     vex::timer location1timer;
     location1timer.clear();
 
-    while (location1timer.time(vex::timeUnits::sec) < 30){
+    while (location1timer.time(vex::timeUnits::sec) < 100){
 
         turnToAbsolute(angle);
         
@@ -1034,55 +1041,55 @@ void auton_interaction(){
         
     }
 
-    pathFindTo(13,23);
+    // pathFindTo(13,23);
 
-    angle = 115;
+    // angle = 115;
 
-    vex::timer location2timer;
-    location2timer.clear();
+    // vex::timer location2timer;
+    // location2timer.clear();
 
-    while (location2timer.time(vex::timeUnits::sec) < 40){
+    // while (location2timer.time(vex::timeUnits::sec) < 40){
 
-        turnToAbsolute(angle);
+    //     turnToAbsolute(angle);
         
-        wait(timeToRest, timeUnits::msec);
-        target = findTarget(local_map);
+    //     wait(timeToRest, timeUnits::msec);
+    //     target = findTarget(local_map);
 
-        target_x = target.mapLocation.x / 0.0254;
-        target_y = target.mapLocation.y / 0.0254;
-        distance = distanceTo(target_x, target_y) - 2;
+    //     target_x = target.mapLocation.x / 0.0254;
+    //     target_y = target.mapLocation.y / 0.0254;
+    //     distance = distanceTo(target_x, target_y) - 2;
 
-        if(target.classID != -1){
+    //     if(target.classID != -1){
 
-            if((target_x > 50 && target_y < 15) || (distance > 35) || (target_x < 24) || (target_y < 12)){
+    //         if((target_x > 50 && target_y < 15) || (distance > 35) || (target_x < 24) || (target_y < 12)){
 
-            }else{ // ok to intake
-                intakemotorrunning = true;
-                vex::task t5(autoIntakeColor);
+    //         }else{ // ok to intake
+    //             intakemotorrunning = true;
+    //             vex::task t5(autoIntakeColor);
                 
-                turnTo(target_x, target_y);
+    //             turnTo(target_x, target_y);
                 
-                forwardStraight(distance, 355.0);
-                //intake one more ball already
+    //             forwardStraight(distance, 355.0);
+    //             //intake one more ball already
 
-                wait(timeToRest, timeUnits::msec);
-                turnTo(17,22.2);
-                distance = distanceTo(17,22.2);
-                forwardStraight(distance);
+    //             wait(timeToRest, timeUnits::msec);
+    //             turnTo(17,22.2);
+    //             distance = distanceTo(17,22.2);
+    //             forwardStraight(distance);
 
-                wait(timeToRest, timeUnits::msec);
-                turnTo(-1,0);
-                intakemotorrunning = false;
-                forwardStraight(distanceTo(-1,0) - 14);
+    //             wait(timeToRest, timeUnits::msec);
+    //             turnTo(-1,0);
+    //             intakemotorrunning = false;
+    //             forwardStraight(distanceTo(-1,0) - 14);
 
-                autoOuttakeLow(2500);
+    //             autoOuttakeLow(2500);
 
-                forwardStraight(-10);
-            }
+    //             forwardStraight(-10);
+    //         }
 
-        }
-        angle = angle - 25;
-    }
+    //     }
+    //     angle = angle - 25;
+    // }
 }
 
 void teleop(void) {
@@ -1132,7 +1139,8 @@ void teleop(void) {
 
     if (Controller1.ButtonY.pressing()) {
         // turnToReverse(-23.75, 47.5);
-        autoOuttakeLow(2500);
+        auton_interaction();
+        // autoOuttakeLow(2500);
         // turnToRelative(90);
         //pathFindTo(-40,24);
         //scoreIn(RED_HIGH_LEFT, 2000);
